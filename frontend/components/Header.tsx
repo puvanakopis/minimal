@@ -4,19 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import LogoIcon from './LogoIcon'
 import useNavigateTo from '@/hooks/useNavigateTo'
-
-interface User {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-}
+import { useAuth } from '@/context/AuthContext'
 
 export default function Header() {
     const [cartCount] = useState(0)
     const [menuOpen, setMenuOpen] = useState(false)
     const [profileOpen, setProfileOpen] = useState(false)
-    const [user, setUser] = useState<User | null>(null)
+    const { user, logout } = useAuth()
 
     const navigateTo = useNavigateTo()
     const pathname = usePathname()
@@ -58,21 +52,6 @@ export default function Header() {
     const isActive = (path: string) => pathname === path
 
     useEffect(() => {
-        async function fetchUser() {
-            try {
-                const res = await fetch('/api/auth/me')
-                if (res.ok) {
-                    const data = await res.json()
-                    setUser(data.user)
-                }
-            } catch (err) {
-                console.error('Failed to fetch user:', err)
-            }
-        }
-        fetchUser()
-    }, [pathname])
-
-    useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (
                 profileRef.current &&
@@ -94,13 +73,7 @@ export default function Header() {
 
     const handleLogout = async () => {
         setProfileOpen(false)
-        try {
-            await fetch('/api/auth/logout', { method: 'POST' })
-            setUser(null)
-            navigateTo('/login', true)
-        } catch (err) {
-            console.error('Failed to logout:', err)
-        }
+        await logout()
     }
 
     if (pathname === '/login' || pathname.startsWith('/admin')) return null

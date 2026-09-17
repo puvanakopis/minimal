@@ -1,48 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, ShoppingBag, ShoppingCart, Users, LogOut, Loader2, ArrowLeft } from 'lucide-react';
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role?: string;
-}
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.user && data.user.role === 'admin') {
-            setUser(data.user);
-            setLoading(false);
-          } else {
-            router.push('/login');
-          }
-        } else {
-          router.push('/login');
-        }
-      } catch (err) {
-        console.error(err);
-        router.push('/login');
-      }
-    }
-    checkAuth();
-  }, [router]);
+    if (isLoading) return;
 
-  if (loading) {
+    const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'admin';
+    if (!user || !isAdmin) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-off-white">
         <div className="flex flex-col items-center gap-4">
@@ -59,15 +37,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Users', href: '/admin/users', icon: Users },
   ];
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#f8fafb] flex">
@@ -121,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Back to Shop
           </Link>
           <button
-            onClick={handleLogout}
+            onClick={() => logout()}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-50 transition-all duration-300 cursor-pointer"
           >
             <LogOut size={16} />

@@ -1,70 +1,48 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role?: string;
-}
+import { useAuth } from '@/context/AuthContext';
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        const user: User | null = data.user;
+    if (isLoading) return;
 
-        const isAdminPath = pathname.startsWith('/admin');
-        const isAuthPath = pathname === '/login';
-        
-        // List of pages that require user login
-        const protectedUserPaths = ['/profile', '/orders', '/favorites', '/settings', '/shipping', '/payment'];
-        const isProtectedUserPath = protectedUserPaths.some(path => pathname.startsWith(path));
+    const isAdminPath = pathname.startsWith('/admin');
+    const isAuthPath = pathname === '/login';
 
-        if (!user) {
-          // Guest User: If they try to access admin or protected user pages, redirect to login
-          if (isAdminPath || isProtectedUserPath) {
-            router.push('/login');
-          } else {
-            setLoading(false);
-          }
-        } else if (user.role === 'admin') {
-          // Admin User: Admins can ONLY access admin pages.
-          if (!isAdminPath) {
-            router.push('/admin');
-          } else {
-            setLoading(false);
-          }
-        } else {
-          // Regular User: Users can ONLY access user pages, NOT admin pages.
-          if (isAdminPath) {
-            router.push('/');
-          } else if (isAuthPath) {
-            router.push('/');
-          } else {
-            setLoading(false);
-          }
-        }
-      } catch (err) {
-        console.error('Route Guard Error:', err);
-        setLoading(false);
+    // List of pages that require user login
+    const protectedUserPaths = ['/profile', '/orders', '/favorites', '/settings', '/shipping', '/payment'];
+    const isProtectedUserPath = protectedUserPaths.some((path) => pathname.startsWith(path));
+
+    const isAdminRole = user?.role === 'ROLE_ADMIN' || user?.role === 'admin';
+
+    if (!user) {
+      // Guest User: If they try to access admin or protected user pages, redirect to login
+      if (isAdminPath || isProtectedUserPath) {
+        router.push('/login');
+      }
+    } else if (isAdminRole) {
+      // Admin User: Admins can ONLY access admin pages.
+      if (!isAdminPath) {
+        router.push('/admin');
+      }
+    } else {
+      // Regular User: Users can ONLY access user pages, NOT admin pages.
+      if (isAdminPath) {
+        router.push('/');
+      } else if (isAuthPath) {
+        router.push('/');
       }
     }
+  }, [user, isLoading, pathname, router]);
 
-    checkAuth();
-  }, [pathname, router]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-off-white">
         <div className="flex flex-col items-center gap-4">

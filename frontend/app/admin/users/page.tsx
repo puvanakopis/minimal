@@ -4,32 +4,18 @@ import { useEffect, useState } from 'react';
 import { Shield, User, Trash2 } from 'lucide-react';
 import { User as DbUser } from '@/lib/db';
 import AdminLoading from '../loading';
+import { useAuth } from '@/context/AuthContext';
 
 type UserSession = Omit<DbUser, 'passwordHash' | 'salt'>;
 
 export default function AdminUsers() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCurrentUser();
     fetchUsers();
   }, []);
-
-  async function fetchCurrentUser() {
-    try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          setCurrentUserEmail(data.user.email);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
 
   async function fetchUsers() {
     try {
@@ -46,7 +32,7 @@ export default function AdminUsers() {
   }
 
   const handleRoleToggle = async (userItem: UserSession) => {
-    if (userItem.email === currentUserEmail) {
+    if (userItem.email === currentUser?.email) {
       alert('Cannot change your own role.');
       return;
     }
@@ -73,7 +59,7 @@ export default function AdminUsers() {
   };
 
   const handleDeleteUser = async (id: string, email: string) => {
-    if (email === currentUserEmail) {
+    if (email === currentUser?.email) {
       alert('Cannot delete your own account.');
       return;
     }
@@ -120,7 +106,7 @@ export default function AdminUsers() {
             </thead>
             <tbody>
               {users.map((userItem) => {
-                const isSelf = userItem.email === currentUserEmail;
+                const isSelf = userItem.email === currentUser?.email;
                 return (
                   <tr key={userItem.id} className="border-b border-gray-100 hover:bg-off-white/50 transition-all duration-150">
                     <td className="p-4 flex items-center gap-3">

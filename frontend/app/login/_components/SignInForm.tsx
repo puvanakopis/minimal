@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
+import { authApi } from '@/lib/api/auth'
+import { useAuth } from '@/context/AuthContext'
 
 interface SignInFormProps {
     onForgotPassword: () => void
@@ -10,6 +12,7 @@ interface SignInFormProps {
 }
 
 export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormProps) {
+    const { login } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -56,31 +59,23 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
         setIsLoading(true)
 
         try {
-            const res = await fetch('/api/auth/signin', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            })
+            const res = await authApi.login({ email, password })
 
-            const data = await res.json()
+            if (res.success && res.data) {
+                login(res.data.token, res.data.user)
 
-            if (!res.ok) {
-                setFormError(data.error || 'Something went wrong')
-                setIsLoading(false)
-                return
-            }
-
-            // Navigate to appropriate page on success
-            if (data.user?.role === 'admin') {
-                window.location.href = '/admin'
+                // Navigate to appropriate page on success
+                if (res.data.user?.role === 'ROLE_ADMIN' || res.data.user?.role === 'admin') {
+                    window.location.href = '/admin'
+                } else {
+                    window.location.href = '/'
+                }
             } else {
-                window.location.href = '/'
+                setFormError(res.message || 'Something went wrong')
+                setIsLoading(false)
             }
-        } catch (err) {
-            console.error('Sign in error:', err)
-            setFormError('Network error. Please try again.')
+        } catch (err: any) {
+            setFormError(err.message || 'Invalid email or password. Please try again.')
             setIsLoading(false)
         }
     }
