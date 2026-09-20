@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Loader2, CheckCircle2, RotateCw, KeyRound, Lock, Eye, EyeOff } from 'lucide-react'
-import { authApi } from '@/lib/api/auth'
+import { authService as authApi } from '@/services'
 
 interface ForgotPasswordFormProps {
   onBack: () => void

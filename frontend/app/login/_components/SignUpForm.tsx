@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, UserPlus, Loader2, CheckCircle2, RotateCw } from 'lucide-react'
-import { authApi } from '@/lib/api/auth'
+import { authService as authApi } from '@/services'
 
 interface SignUpFormProps {
     onSignIn: () => void

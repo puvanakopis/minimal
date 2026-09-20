@@ -1,11 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { ApiResponse } from '@/interfaces/api.interface';
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  message: string;
-  data?: T;
-  errors?: Record<string, string>;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export class ApiError extends Error {
   errors?: Record<string, string>;
@@ -50,11 +45,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     }
 
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError(error.message || 'Network error. Please check your connection.');
+    const message = error instanceof Error ? error.message : 'Network error. Please check your connection.';
+    throw new ApiError(message);
   }
 }
 
@@ -62,14 +58,14 @@ export const apiClient = {
   get: <T>(endpoint: string, options?: RequestInit) =>
     request<T>(endpoint, { ...options, method: 'GET' }),
 
-  post: <T>(endpoint: string, body?: any, options?: RequestInit) =>
+  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       ...options,
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     }),
 
-  put: <T>(endpoint: string, body?: any, options?: RequestInit) =>
+  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       ...options,
       method: 'PUT',

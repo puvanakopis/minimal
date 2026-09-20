@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Order } from '@/lib/db';
+import { Order } from '@/interfaces';
 import AdminLoading from '../loading';
 
 export default function AdminOrders() {
@@ -94,23 +94,23 @@ export default function AdminOrders() {
                       </td>
                       <td className="p-4 font-bold text-xs text-[#1a1a1a]">{order.id}</td>
                       <td className="p-4">
-                        <div className="text-xs font-bold text-[#1a1a1a]">{order.customerName}</div>
-                        <div className="text-[10px] text-gray-400">{order.email}</div>
+                        <div className="text-xs font-bold text-[#1a1a1a]">{order.customerName || order.shippingAddress?.fullName || 'Customer'}</div>
+                        <div className="text-[10px] text-gray-400">{order.email || order.guestEmail || 'N/A'}</div>
                       </td>
                       <td className="p-4 text-xs text-gray-600">
-                        {new Date(order.createdAt).toLocaleDateString(undefined, {
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString(undefined, {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
-                        })}
+                        }) : 'N/A'}
                       </td>
-                      <td className="p-4 text-xs font-bold text-[#1a1a1a]">${order.totalAmount.toFixed(2)}</td>
+                      <td className="p-4 text-xs font-bold text-[#1a1a1a]">${(order.totalAmount ?? order.total ?? 0).toFixed(2)}</td>
                       <td className="p-4">
                         <span
                           className={`inline-block text-[8px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full ${
-                            order.status === 'Delivered'
+                            order.status?.toLowerCase() === 'delivered'
                               ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                              : order.status === 'Cancelled'
+                              : order.status?.toLowerCase() === 'cancelled'
                               ? 'bg-rose-50 text-rose-600 border border-rose-100'
                               : 'bg-amber-50 text-amber-600 border border-amber-100'
                           }`}
@@ -138,8 +138,8 @@ export default function AdminOrders() {
                           <div className="space-y-4 max-w-2xl">
                             <h4 className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Order Contents</h4>
                             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
-                              {order.products.map((p) => (
-                                <div key={p.productId} className="flex justify-between items-center p-3 border-b border-gray-100 last:border-0 text-xs">
+                              {(order.products || order.items || []).map((p, idx) => (
+                                <div key={p.productId || idx} className="flex justify-between items-center p-3 border-b border-gray-100 last:border-0 text-xs">
                                   <div className="space-y-0.5">
                                     <span className="font-bold text-[#1a1a1a]">{p.name}</span>
                                     <span className="block text-[10px] text-gray-400">Product ID: {p.productId}</span>

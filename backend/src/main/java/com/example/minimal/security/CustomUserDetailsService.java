@@ -22,6 +22,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
+        com.example.minimal.model.Role role = user.getRole() != null ? user.getRole() : com.example.minimal.model.Role.user;
+        String authority = "ROLE_" + role.name().toUpperCase();
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
@@ -29,7 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 true,
                 true,
                 true,
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole()))
+                Collections.singletonList(new SimpleGrantedAuthority(authority))
         );
     }
 }

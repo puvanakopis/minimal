@@ -3,6 +3,7 @@ package com.example.minimal.service;
 import com.example.minimal.dto.*;
 import com.example.minimal.exception.AppException;
 import com.example.minimal.model.OtpPurpose;
+import com.example.minimal.model.Role;
 import com.example.minimal.model.User;
 import com.example.minimal.repository.UserRepository;
 import com.example.minimal.security.JwtService;
@@ -48,6 +49,7 @@ public class AuthService {
                 existingUser.setFirstName(request.getFirstName().trim());
                 existingUser.setLastName(request.getLastName().trim());
                 existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+                existingUser.setRole(Role.user);
                 userRepository.save(existingUser);
             }
         } else {
@@ -57,7 +59,7 @@ public class AuthService {
                     .email(email)
                     .password(passwordEncoder.encode(request.getPassword()))
                     .emailVerified(false)
-                    .role("ROLE_USER")
+                    .role(Role.user)
                     .build();
             userRepository.save(newUser);
         }
@@ -98,8 +100,7 @@ public class AuthService {
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(email, request.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(email, request.getPassword()));
         } catch (BadCredentialsException e) {
             throw new AppException("Invalid email or password", HttpStatus.UNAUTHORIZED);
         }
@@ -141,7 +142,8 @@ public class AuthService {
         String email = request.getEmail().toLowerCase().trim();
 
         if (!jwtService.validatePasswordResetToken(request.getResetToken(), email)) {
-            throw new AppException("Invalid or expired password reset session. Please restart the reset process.", HttpStatus.BAD_REQUEST);
+            throw new AppException("Invalid or expired password reset session. Please restart the reset process.",
+                    HttpStatus.BAD_REQUEST);
         }
 
         User user = userRepository.findByEmailIgnoreCase(email)

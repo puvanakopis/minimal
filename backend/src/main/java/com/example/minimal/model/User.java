@@ -38,9 +38,10 @@ public class User {
     @Builder.Default
     private boolean emailVerified = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
     @Builder.Default
-    private String role = "ROLE_USER";
+    private Role role = Role.user;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

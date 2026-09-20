@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
-import { authApi } from '@/lib/api/auth'
+import { authService as authApi } from '@/services'
 import { useAuth } from '@/context/AuthContext'
 
 interface SignInFormProps {
@@ -64,8 +64,11 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
             if (res.success && res.data) {
                 login(res.data.token, res.data.user)
 
-                // Navigate to appropriate page on success
-                if (res.data.user?.role === 'ROLE_ADMIN' || res.data.user?.role === 'admin') {
+                // Navigate based on user role: admin -> /admin, user -> /
+                const userRole = res.data.user?.role?.toString().toLowerCase()
+                const isAdmin = userRole === 'admin' || userRole === 'role_admin'
+
+                if (isAdmin) {
                     window.location.href = '/admin'
                 } else {
                     window.location.href = '/'

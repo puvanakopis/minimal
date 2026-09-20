@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Shield, User, Trash2 } from 'lucide-react';
-import { User as DbUser } from '@/lib/db';
+import { Shield, User as UserIcon, Trash2 } from 'lucide-react';
+import { User } from '@/interfaces';
 import AdminLoading from '../loading';
 import { useAuth } from '@/context/AuthContext';
 
-type UserSession = Omit<DbUser, 'passwordHash' | 'salt'>;
+type UserSession = User;
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
@@ -58,7 +58,7 @@ export default function AdminUsers() {
     }
   };
 
-  const handleDeleteUser = async (id: string, email: string) => {
+  const handleDeleteUser = async (id: string | number, email: string) => {
     if (email === currentUser?.email) {
       alert('Cannot delete your own account.');
       return;
@@ -113,7 +113,7 @@ export default function AdminUsers() {
                       <div className={`size-8 rounded-full flex items-center justify-center text-xs font-bold ${
                         userItem.role === 'admin' ? 'bg-brand-teal/10 text-brand-teal' : 'bg-gray-100 text-gray-600'
                       }`}>
-                        {userItem.role === 'admin' ? <Shield size={14} /> : <User size={14} />}
+                        {userItem.role === 'admin' ? <Shield size={14} /> : <UserIcon size={14} />}
                       </div>
                       <span className="text-xs font-bold text-[#1a1a1a]">
                         {userItem.firstName} {userItem.lastName} {isSelf && <span className="text-[9px] text-brand-teal ml-1">(you)</span>}
@@ -134,11 +134,11 @@ export default function AdminUsers() {
                       </span>
                     </td>
                     <td className="p-4 text-xs text-gray-500">
-                      {new Date(userItem.createdAt).toLocaleDateString(undefined, {
+                      {userItem.createdAt ? new Date(userItem.createdAt).toLocaleDateString(undefined, {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
-                      })}
+                      }) : 'N/A'}
                     </td>
                     <td className="p-4 text-right">
                       <button

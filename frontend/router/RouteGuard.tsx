@@ -4,6 +4,14 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { User } from '@/interfaces';
+
+
+export const isUserAdmin = (user?: User | null): boolean => {
+  if (!user || !user.role) return false;
+  const role = user.role.toString().toLowerCase();
+  return role === 'admin' || role === 'role_admin';
+};
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -16,24 +24,36 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     const isAdminPath = pathname.startsWith('/admin');
     const isAuthPath = pathname === '/login';
 
-    // List of pages that require user login
-    const protectedUserPaths = ['/profile', '/orders', '/favorites', '/settings', '/shipping', '/payment'];
-    const isProtectedUserPath = protectedUserPaths.some((path) => pathname.startsWith(path));
+    const protectedUserPaths = [
+      '/profile',
+      '/orders',
+      '/favorites',
+      '/settings',
+      '/shipping',
+      '/payment',
+    ];
+    const isProtectedUserPath = protectedUserPaths.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`)
+    );
 
-    const isAdminRole = user?.role === 'ROLE_ADMIN' || user?.role === 'admin';
+    const admin = isUserAdmin(user);
 
     if (!user) {
-      // Guest User: If they try to access admin or protected user pages, redirect to login
+      // 1. Unauthenticated Guest:
+      // If trying to access admin or protected customer routes, redirect to login
       if (isAdminPath || isProtectedUserPath) {
         router.push('/login');
       }
-    } else if (isAdminRole) {
-      // Admin User: Admins can ONLY access admin pages.
-      if (!isAdminPath) {
+    } else if (admin) {
+      // 2. Admin User:
+      // If accessing login page, redirect to /admin
+      if (isAuthPath) {
         router.push('/admin');
       }
+      // Note: Admin has permission to access /admin routes as well as public store pages
     } else {
-      // Regular User: Users can ONLY access user pages, NOT admin pages.
+      // 3. Regular Customer (role: user):
+      // If trying to access admin panel, redirect to home /
       if (isAdminPath) {
         router.push('/');
       } else if (isAuthPath) {
@@ -55,3 +75,4 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
 
   return <>{children}</>;
 }
+

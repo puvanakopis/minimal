@@ -26,7 +26,18 @@ export default function Header() {
         { label: 'Contact', path: '/contact' },
     ]
 
+    const isAdmin = user?.role?.toString().toLowerCase() === 'admin' || user?.role?.toString().toLowerCase() === 'role_admin'
+
     const profileMenu = [
+        ...(isAdmin
+            ? [
+                {
+                    label: 'Admin Dashboard',
+                    icon: 'dashboard',
+                    path: '/admin',
+                },
+            ]
+            : []),
         {
             label: 'Profile',
             icon: 'person',

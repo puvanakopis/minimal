@@ -1,5 +1,6 @@
 package com.example.minimal.dto;
 
+import com.example.minimal.model.Role;
 import com.example.minimal.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +29,7 @@ public class UserDto {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .emailVerified(user.isEmailVerified())
-                .role(user.getRole())
+                .role(user.getRole() != null ? user.getRole().name() : Role.user.name())
                 .createdAt(user.getCreatedAt())
                 .build();
     }
