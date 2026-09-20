@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { KeyRound, Eye, EyeOff, Trash2, AlertTriangle } from "lucide-react";
-import { toast } from "react-toastify";
+import { notify } from "@/helper/toast";
 
 export function SettingsForm() {
     // Password Form State
@@ -21,7 +21,7 @@ export function SettingsForm() {
     const handlePasswordUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (passwords.new !== passwords.confirm) {
-            toast.error("New passwords do not match.");
+            notify.error("New passwords do not match.");
             return;
         }
         setIsUpdating(true);
@@ -31,13 +31,13 @@ export function SettingsForm() {
 
         setIsUpdating(false);
         setUpdateStatus("success");
-        toast.success("Security credentials updated successfully.");
+        notify.success("Security credentials updated successfully.");
         setTimeout(() => setUpdateStatus("idle"), 3000);
     };
 
     const handleDelete = async () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        toast.info("Account deletion request submitted (mock action).");
+        notify.info("Account deletion request submitted (mock action).");
     };
 
     return (
@@ -177,8 +177,8 @@ export function SettingsForm() {
                                 type="submit"
                                 disabled={isUpdating}
                                 className={`px-12 py-5 font-bold uppercase tracking-[0.3em] text-[11px] transition-all duration-500 ${updateStatus === "success"
-                                        ? "bg-zinc-900 text-white"
-                                        : "bg-brand-teal text-white hover:bg-zinc-900"
+                                    ? "bg-zinc-900 text-white"
+                                    : "bg-brand-teal text-white hover:bg-zinc-900"
                                     } disabled:opacity-70 shadow-lg shadow-brand-teal/20`}
                             >
                                 {isUpdating

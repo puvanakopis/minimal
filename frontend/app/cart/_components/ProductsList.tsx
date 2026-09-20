@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { notify } from "@/helper/toast";
 
 interface CartItem {
     id: string;
@@ -49,7 +50,11 @@ export function ProductsList({ items }: ProductsListProps) {
     };
 
     const removeItem = (id: string) => {
+        const itemToRemove = cartItems.find((item) => item.id === id);
         setCartItems((prev) => prev.filter((item) => item.id !== id));
+        if (itemToRemove) {
+            notify.info(`Removed ${itemToRemove.name} from your bag.`);
+        }
     };
 
     return (

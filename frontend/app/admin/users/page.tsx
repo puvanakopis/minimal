@@ -5,8 +5,7 @@ import { Shield, User as UserIcon, Trash2 } from 'lucide-react';
 import { User } from '@/interfaces';
 import AdminLoading from '../loading';
 import { useAuth } from '@/context/AuthContext';
-
-import { toast } from 'react-toastify';
+import { notify } from '@/helper/toast';
 
 type UserSession = User;
 
@@ -35,7 +34,7 @@ export default function AdminUsers() {
 
   const handleRoleToggle = async (userItem: UserSession) => {
     if (userItem.email === currentUser?.email) {
-      toast.warning('Cannot change your own role.');
+      notify.warning('Cannot change your own role.');
       return;
     }
 
@@ -50,21 +49,21 @@ export default function AdminUsers() {
       });
 
       if (res.ok) {
-        toast.success(`User role updated to ${newRole}`);
+        notify.success(`User role updated to ${newRole}`);
         fetchUsers();
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Failed to update user role');
+        notify.error(err.error || 'Failed to update user role');
       }
     } catch (err) {
       console.error(err);
-      toast.error('An unexpected error occurred');
+      notify.error('An unexpected error occurred');
     }
   };
 
   const handleDeleteUser = async (id: string | number, email: string) => {
     if (email === currentUser?.email) {
-      toast.warning('Cannot delete your own account.');
+      notify.warning('Cannot delete your own account.');
       return;
     }
 
@@ -73,15 +72,15 @@ export default function AdminUsers() {
     try {
       const res = await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success(`User ${email} successfully deleted.`);
+        notify.success(`User ${email} successfully deleted.`);
         fetchUsers();
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Failed to delete user');
+        notify.error(err.error || 'Failed to delete user');
       }
     } catch (err) {
       console.error(err);
-      toast.error('An unexpected error occurred while deleting user');
+      notify.error('An unexpected error occurred while deleting user');
     }
   };
 
@@ -116,9 +115,8 @@ export default function AdminUsers() {
                 return (
                   <tr key={userItem.id} className="border-b border-gray-100 hover:bg-off-white/50 transition-all duration-150">
                     <td className="p-4 flex items-center gap-3">
-                      <div className={`size-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                        userItem.role === 'admin' ? 'bg-brand-teal/10 text-brand-teal' : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <div className={`size-8 rounded-full flex items-center justify-center text-xs font-bold ${userItem.role === 'admin' ? 'bg-brand-teal/10 text-brand-teal' : 'bg-gray-100 text-gray-600'
+                        }`}>
                         {userItem.role === 'admin' ? <Shield size={14} /> : <UserIcon size={14} />}
                       </div>
                       <span className="text-xs font-bold text-[#1a1a1a]">
@@ -129,11 +127,10 @@ export default function AdminUsers() {
                     <td className="p-4">
                       <span
                         onClick={() => !isSelf && handleRoleToggle(userItem)}
-                        className={`inline-block text-[8px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded cursor-pointer ${
-                          userItem.role === 'admin'
+                        className={`inline-block text-[8px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded cursor-pointer ${userItem.role === 'admin'
                             ? 'bg-brand-teal text-white hover:bg-brand-teal/90'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        } ${isSelf ? 'pointer-events-none opacity-80' : ''}`}
+                          } ${isSelf ? 'pointer-events-none opacity-80' : ''}`}
                         title={isSelf ? undefined : 'Click to toggle role'}
                       >
                         {userItem.role || 'user'}
@@ -150,9 +147,8 @@ export default function AdminUsers() {
                       <button
                         onClick={() => handleDeleteUser(userItem.id, userItem.email)}
                         disabled={isSelf}
-                        className={`size-8 rounded-lg flex items-center justify-center border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-500 transition-colors ${
-                          isSelf ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'
-                        }`}
+                        className={`size-8 rounded-lg flex items-center justify-center border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-500 transition-colors ${isSelf ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'
+                          }`}
                         title={isSelf ? 'Cannot delete yourself' : 'Delete User'}
                       >
                         <Trash2 size={14} />

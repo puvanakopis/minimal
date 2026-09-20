@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Product, Review } from '@/interfaces';
 import { productService } from '@/services';
 import { useAuth } from '@/context/AuthContext';
+import { notify } from '@/helper/toast';
 import { Star, MessageSquare, Send, CheckCircle2, User as UserIcon } from 'lucide-react';
 
 interface ProductDetailsProps {
@@ -55,6 +56,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   }, [product.id]);
 
   const handleAddToCart = () => {
+    notify.success(`Added ${quantity} × ${product.name} to your bag.`);
     console.log('Added to cart:', {
       product,
       size: selectedSize,
@@ -73,7 +75,9 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     setReviewSuccessMsg('');
 
     if (!reviewComment.trim()) {
-      setReviewErrorMsg('Please write your review message.');
+      const err = 'Please write your review message.';
+      setReviewErrorMsg(err);
+      notify.warning(err);
       return;
     }
 
@@ -93,15 +97,21 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
       if (response.success && response.data) {
         setReviews((prev) => [response.data as Review, ...prev]);
-        setReviewSuccessMsg('Thank you! Your review has been submitted.');
+        const msg = 'Thank you! Your review has been submitted.';
+        setReviewSuccessMsg(msg);
+        notify.success(msg);
         setReviewComment('');
         setReviewRating(5);
         setShowReviewForm(false);
       } else {
-        setReviewErrorMsg(response.message || 'Failed to submit review');
+        const msg = response.message || 'Failed to submit review';
+        setReviewErrorMsg(msg);
+        notify.error(msg);
       }
     } catch (err: any) {
-      setReviewErrorMsg(err.message || 'Error submitting review');
+      const msg = err.message || 'Error submitting review';
+      setReviewErrorMsg(msg);
+      notify.apiError(err, 'Error submitting review');
     } finally {
       setSubmittingReview(false);
     }

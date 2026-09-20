@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, Loader2, ArrowRight } from 'lucide-react';
+import { notify } from '@/helper/toast';
 
 const categories = [
     { id: 'order', label: 'Order & Shipping' },
@@ -36,7 +37,10 @@ export default function ContactForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!validate()) return;
+        if (!validate()) {
+            notify.warning('Please complete all required fields.');
+            return;
+        }
 
         setStatus('submitting');
 
@@ -45,6 +49,7 @@ export default function ContactForm() {
 
         // Randomly succeed for mock simulation (always succeeds in this case)
         setStatus('success');
+        notify.success('Your message has been submitted to concierge support.');
     };
 
     const handleReset = () => {

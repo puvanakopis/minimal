@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, UserPlus, Loader2, CheckCircle2, RotateCw } from 'lucide-react'
 import { authService as authApi } from '@/services'
+import { notify } from '@/helper/toast'
 
 interface SignUpFormProps {
     onSignIn: () => void
@@ -127,12 +128,18 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
 
             if (res.success) {
                 setOtpStep(true)
-                setFormSuccess('Verification code sent! Please check your email inbox.')
+                const msg = 'Verification code sent! Please check your email inbox.'
+                setFormSuccess(msg)
+                notify.success(msg)
             } else {
-                setFormError(res.message || 'Failed to initiate registration.')
+                const msg = res.message || 'Failed to initiate registration.'
+                setFormError(msg)
+                notify.error(msg)
             }
         } catch (err: any) {
-            setFormError(err.message || 'An error occurred during registration.')
+            const msg = err.message || 'An error occurred during registration.'
+            setFormError(msg)
+            notify.apiError(err, 'An error occurred during registration.')
         } finally {
             setIsLoading(false)
         }
@@ -158,15 +165,21 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
             })
 
             if (res.success) {
-                setFormSuccess('Account verified successfully! Redirecting to sign in...')
+                const msg = 'Account verified successfully! Redirecting to sign in...'
+                setFormSuccess(msg)
+                notify.success(msg)
                 setTimeout(() => {
                     onSignIn()
                 }, 2000)
             } else {
-                setFormError(res.message || 'OTP verification failed.')
+                const msg = res.message || 'OTP verification failed.'
+                setFormError(msg)
+                notify.error(msg)
             }
         } catch (err: any) {
-            setFormError(err.message || 'Invalid or expired OTP.')
+            const msg = err.message || 'Invalid or expired OTP.'
+            setFormError(msg)
+            notify.apiError(err, 'Invalid or expired OTP.')
         } finally {
             setIsLoading(false)
         }
@@ -184,12 +197,18 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
             })
 
             if (res.success) {
-                setFormSuccess('A new verification code has been sent to your email.')
+                const msg = 'A new verification code has been sent to your email.'
+                setFormSuccess(msg)
+                notify.info(msg)
             } else {
-                setFormError(res.message || 'Failed to resend verification code.')
+                const msg = res.message || 'Failed to resend verification code.'
+                setFormError(msg)
+                notify.error(msg)
             }
         } catch (err: any) {
-            setFormError(err.message || 'Could not resend OTP. Please try again shortly.')
+            const msg = err.message || 'Could not resend OTP. Please try again shortly.'
+            setFormError(msg)
+            notify.apiError(err, 'Could not resend OTP. Please try again shortly.')
         } finally {
             setIsResending(false)
         }

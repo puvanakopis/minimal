@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Order } from '@/interfaces';
 import AdminLoading from '../loading';
-
-import { toast } from 'react-toastify';
+import { notify } from '@/helper/toast';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -39,15 +38,15 @@ export default function AdminOrders() {
       });
 
       if (res.ok) {
-        toast.success(`Order #${id.slice(-6)} status updated to ${newStatus}`);
+        notify.success(`Order #${id.slice(-6)} status updated to ${newStatus}`);
         fetchOrders();
       } else {
         const err = await res.json();
-        toast.error(err.error || 'Failed to update order status');
+        notify.error(err.error || 'Failed to update order status');
       }
     } catch (err) {
       console.error(err);
-      toast.error('An unexpected error occurred while updating status');
+      notify.error('An unexpected error occurred while updating status');
     }
   };
 
@@ -111,13 +110,12 @@ export default function AdminOrders() {
                       <td className="p-4 text-xs font-bold text-[#1a1a1a]">${(order.totalAmount ?? order.total ?? 0).toFixed(2)}</td>
                       <td className="p-4">
                         <span
-                          className={`inline-block text-[8px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full ${
-                            order.status?.toLowerCase() === 'delivered'
+                          className={`inline-block text-[8px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full ${order.status?.toLowerCase() === 'delivered'
                               ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                               : order.status?.toLowerCase() === 'cancelled'
-                              ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                              : 'bg-amber-50 text-amber-600 border border-amber-100'
-                          }`}
+                                ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                : 'bg-amber-50 text-amber-600 border border-amber-100'
+                            }`}
                         >
                           {order.status}
                         </span>

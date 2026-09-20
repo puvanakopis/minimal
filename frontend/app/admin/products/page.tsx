@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Product } from '@/interfaces';
 import { productService } from '@/services';
 import { getImageUrl } from '@/helper/image';
+import { notify } from '@/helper/toast';
 import AdminLoading from '../loading';
 
 interface ImageEntry {
@@ -210,13 +211,18 @@ export default function AdminProducts() {
       });
 
       if (!response.success) {
-        setFormError(response.message || 'Failed to add product');
+        const msg = response.message || 'Failed to add product';
+        setFormError(msg);
+        notify.error(msg);
       } else {
+        notify.success(`Product "${name}" created successfully!`);
         setShowAddModal(false);
         fetchProducts();
       }
     } catch (err: any) {
-      setFormError(err.message || 'Error creating product. Try again.');
+      const msg = err.message || 'Error creating product. Try again.';
+      setFormError(msg);
+      notify.apiError(err, 'Error creating product. Try again.');
     } finally {
       setSubmitting(false);
     }
@@ -269,13 +275,18 @@ export default function AdminProducts() {
       });
 
       if (!response.success) {
-        setFormError(response.message || 'Failed to update product');
+        const msg = response.message || 'Failed to update product';
+        setFormError(msg);
+        notify.error(msg);
       } else {
+        notify.success(`Product "${name}" updated successfully!`);
         setEditingProduct(null);
         fetchProducts();
       }
     } catch (err: any) {
-      setFormError(err.message || 'Error updating product. Try again.');
+      const msg = err.message || 'Error updating product. Try again.';
+      setFormError(msg);
+      notify.apiError(err, 'Error updating product. Try again.');
     } finally {
       setSubmitting(false);
     }
@@ -287,10 +298,14 @@ export default function AdminProducts() {
     try {
       const response = await productService.adminDeleteProduct(id);
       if (response.success) {
+        notify.success('Product deleted successfully.');
         fetchProducts();
+      } else {
+        notify.error(response.message || 'Failed to delete product.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      notify.apiError(err, 'An error occurred while deleting product.');
     }
   };
 

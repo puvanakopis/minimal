@@ -2,6 +2,7 @@
 
 import { ToastContainer, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { CustomCloseButton } from '@/helper/toast';
 
 export default function ToastProvider() {
   return (
@@ -10,13 +11,14 @@ export default function ToastProvider() {
       autoClose={3500}
       hideProgressBar={false}
       newestOnTop
-      closeOnClick
+      closeOnClick={false}
       rtl={false}
       pauseOnFocusLoss
       draggable
       pauseOnHover
       theme="light"
       transition={Slide}
+      closeButton={CustomCloseButton}
     />
   );
 }

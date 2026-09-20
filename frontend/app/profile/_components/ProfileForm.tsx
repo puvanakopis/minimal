@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services";
+import { notify } from "@/helper/toast";
 
 const DEFAULT_AVATAR =
     "https://lh3.googleusercontent.com/aida-public/AB6AXuAkqKN-Dn7b2RiByQOdsY3JsOSPqwWe9h5hkK-nlCe_c-yNoY5XnCvvlLfbad7i9b5Hnd_0IG_26KxM972ZeCq7XZ6jaoWnDQcGSMK6pDILCqAqd0y6TPCeIaTGtlyjDNk00J9lutPGvfb97ttlZsxF4Su7lU3kWdeJvFzgoMTlOZm4j1Jwu7Zx38TrKUzlpgcm4FfesCRehO4diutfWGA_X-cQmywSMVRptlZ0_oBPL3Nc7wNj7m_OFngqYFlIe_IUX-VjGx_66KtP";
@@ -57,7 +58,9 @@ export function ProfileForm() {
         // Check file size (limit to 5MB)
         if (file.size > 5 * 1024 * 1024) {
             setSaveStatus("error");
-            setStatusMessage("Image size should be less than 5MB");
+            const err = "Image size should be less than 5MB";
+            setStatusMessage(err);
+            notify.warning(err);
             setTimeout(() => setSaveStatus("idle"), 3000);
             return;
         }
@@ -96,16 +99,21 @@ export function ProfileForm() {
                 setUser(res.data);
                 setAvatarFile(null);
                 setSaveStatus("success");
-                setStatusMessage("Profile updated successfully!");
+                const msg = "Profile updated successfully!";
+                setStatusMessage(msg);
+                notify.success(msg);
             } else {
                 setSaveStatus("error");
-                setStatusMessage(res.message || "Failed to update profile.");
+                const msg = res.message || "Failed to update profile.";
+                setStatusMessage(msg);
+                notify.error(msg);
             }
         } catch (err: unknown) {
             setSaveStatus("error");
             const errorMessage =
                 err instanceof Error ? err.message : "An error occurred while updating profile.";
             setStatusMessage(errorMessage);
+            notify.apiError(err, "An error occurred while updating profile.");
         } finally {
             setIsSaving(false);
             setTimeout(() => {

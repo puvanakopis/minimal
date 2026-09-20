@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { getImageUrl } from '@/helper/image'
+import { notify } from '@/helper/toast'
 
 interface ProductCardProps {
     id: number
@@ -15,8 +16,9 @@ interface ProductCardProps {
 export default function ProductCard({ id, title, color, price, image }: ProductCardProps) {
     const router = useRouter()
 
-    const handleAddToCart = () => {
-        // Add to cart logic here
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        notify.success(`Added ${title} to your bag.`)
         console.log(`Added ${title} to cart`)
     }
 
@@ -26,7 +28,7 @@ export default function ProductCard({ id, title, color, price, image }: ProductC
     }
 
     return (
-        <div 
+        <div
             className="product-card group cursor-pointer"
             onClick={() => router.push(`/products/${id}`)}
         >

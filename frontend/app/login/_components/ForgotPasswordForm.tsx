@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Loader2, CheckCircle2, RotateCw, KeyRound, Lock, Eye, EyeOff } from 'lucide-react'
 import { authService as authApi } from '@/services'
+import { notify } from '@/helper/toast'
 
 interface ForgotPasswordFormProps {
   onBack: () => void
@@ -86,12 +87,18 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
       const res = await authApi.forgotPassword({ email: resetEmail })
       if (res.success) {
         setStep('otp')
-        setFormSuccess('Reset code sent! Please check your email inbox.')
+        const msg = 'Reset code sent! Please check your email inbox.'
+        setFormSuccess(msg)
+        notify.success(msg)
       } else {
-        setFormError(res.message || 'Failed to send reset code.')
+        const msg = res.message || 'Failed to send reset code.'
+        setFormError(msg)
+        notify.error(msg)
       }
     } catch (err: any) {
-      setFormError(err.message || 'Error requesting password reset.')
+      const msg = err.message || 'Error requesting password reset.'
+      setFormError(msg)
+      notify.apiError(err, 'Error requesting password reset.')
     } finally {
       setIsLoading(false)
     }
@@ -119,12 +126,18 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
       if (res.success && res.data?.resetToken) {
         setResetToken(res.data.resetToken)
         setStep('new-password')
-        setFormSuccess('Code verified! Please choose a new password.')
+        const msg = 'Code verified! Please choose a new password.'
+        setFormSuccess(msg)
+        notify.success(msg)
       } else {
-        setFormError(res.message || 'Invalid or expired reset code.')
+        const msg = res.message || 'Invalid or expired reset code.'
+        setFormError(msg)
+        notify.error(msg)
       }
     } catch (err: any) {
-      setFormError(err.message || 'Invalid or expired OTP.')
+      const msg = err.message || 'Invalid or expired OTP.'
+      setFormError(msg)
+      notify.apiError(err, 'Invalid or expired OTP.')
     } finally {
       setIsLoading(false)
     }
@@ -153,15 +166,21 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
 
       if (res.success) {
         setResetSuccess(true)
-        setFormSuccess('Password reset successfully! Returning to sign in...')
+        const msg = 'Password reset successfully! Returning to sign in...'
+        setFormSuccess(msg)
+        notify.success(msg)
         setTimeout(() => {
           onBack()
         }, 2500)
       } else {
-        setFormError(res.message || 'Failed to reset password.')
+        const msg = res.message || 'Failed to reset password.'
+        setFormError(msg)
+        notify.error(msg)
       }
     } catch (err: any) {
-      setFormError(err.message || 'Failed to reset password. Please try again.')
+      const msg = err.message || 'Failed to reset password. Please try again.'
+      setFormError(msg)
+      notify.apiError(err, 'Failed to reset password. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -180,12 +199,18 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
       })
 
       if (res.success) {
-        setFormSuccess('A new reset code has been sent to your email.')
+        const msg = 'A new reset code has been sent to your email.'
+        setFormSuccess(msg)
+        notify.info(msg)
       } else {
-        setFormError(res.message || 'Failed to resend reset code.')
+        const msg = res.message || 'Failed to resend reset code.'
+        setFormError(msg)
+        notify.error(msg)
       }
     } catch (err: any) {
-      setFormError(err.message || 'Could not resend OTP. Cooldown may be active.')
+      const msg = err.message || 'Could not resend OTP. Cooldown may be active.'
+      setFormError(msg)
+      notify.apiError(err, 'Could not resend OTP. Cooldown may be active.')
     } finally {
       setIsResending(false)
     }

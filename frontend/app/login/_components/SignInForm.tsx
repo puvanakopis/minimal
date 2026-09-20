@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 import { authService as authApi } from '@/services'
 import { useAuth } from '@/context/AuthContext'
+import { notify } from '@/helper/toast'
 
 interface SignInFormProps {
     onForgotPassword: () => void
@@ -62,6 +63,7 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
             const res = await authApi.login({ email, password })
 
             if (res.success && res.data) {
+                notify.success(`Welcome back, ${res.data.user?.firstName || 'User'}!`)
                 login(res.data.token, res.data.user)
 
                 // Navigate based on user role: admin -> /admin, user -> /
@@ -74,11 +76,15 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
                     window.location.href = '/'
                 }
             } else {
-                setFormError(res.message || 'Something went wrong')
+                const msg = res.message || 'Something went wrong'
+                setFormError(msg)
+                notify.error(msg)
                 setIsLoading(false)
             }
         } catch (err: any) {
-            setFormError(err.message || 'Invalid email or password. Please try again.')
+            const msg = err.message || 'Invalid email or password. Please try again.'
+            setFormError(msg)
+            notify.apiError(err, 'Invalid email or password. Please try again.')
             setIsLoading(false)
         }
     }
