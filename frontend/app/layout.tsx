@@ -3,6 +3,7 @@ import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import RouteGuard from '@/router/RouteGuard';
 import { AuthProvider } from '@/context/AuthContext';
+import ToastProvider from '@/components/ToastProvider';
 
 import {
   Cormorant_Garamond,
@@ -48,6 +49,7 @@ export default function RootLayout({
             <Header />
             {children}
             <Footer />
+            <ToastProvider />
           </RouteGuard>
         </AuthProvider>
       </body>

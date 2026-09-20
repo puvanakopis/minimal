@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
     { name: "Profile", href: "/profile", icon: "person" },
@@ -12,15 +13,19 @@ const navItems = [
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { user, logout } = useAuth();
+
+    const displayName = user ? `${user.firstName} ${user.lastName}` : "User Account";
+    const displayEmail = user?.email || "user@example.com";
 
     return (
         <aside className="w-1/5 h-[calc(100vh-80px)] sticky top-20 hidden lg:flex flex-col gap-8 border-r border-[#e7f1f3] bg-[#f6f8f8] py-20 px-10">
             <div className="mb-10">
-                <h2 className="text-lg font-bold text-zinc-900 font-serif">
-                    Puvanakopis
+                <h2 className="text-lg font-bold text-zinc-900 font-serif truncate">
+                    {displayName}
                 </h2>
-                <p className="text-xs text-zinc-500 tracking-widest mt-1 font-display">
-                    puvan@example.com
+                <p className="text-xs text-zinc-500 tracking-widest mt-1 font-display truncate">
+                    {displayEmail}
                 </p>
             </div>
             <nav className="flex flex-col gap-1">
@@ -45,13 +50,14 @@ export function Sidebar() {
                         </Link>
                     );
                 })}
-                <Link
-                    href="/logout"
-                    className="flex items-center gap-4 py-3 mt-10 pl-4 text-zinc-400 hover:text-red-500 transition-all duration-200"
+                <button
+                    type="button"
+                    onClick={() => logout()}
+                    className="flex items-center gap-4 py-3 mt-10 pl-4 text-zinc-400 hover:text-red-500 transition-all duration-200 text-left"
                 >
                     <span className="material-symbols-outlined text-xl">logout</span>
                     <span className="text-sm">Logout</span>
-                </Link>
+                </button>
             </nav>
         </aside>
     );

@@ -5,7 +5,18 @@ export interface User {
   email: string;
   emailVerified: boolean;
   role: 'user' | 'admin' | string;
+  phoneNumber?: string;
+  shippingAddress?: string;
+  avatar?: string;
   createdAt?: string;
+}
+
+export interface UpdateProfilePayload {
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  shippingAddress?: string;
+  avatar?: string;
 }
 
 export interface AuthResponseData {

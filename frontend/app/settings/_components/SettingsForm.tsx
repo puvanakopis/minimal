@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { KeyRound, Eye, EyeOff, Trash2, AlertTriangle } from "lucide-react";
+import { toast } from "react-toastify";
 
 export function SettingsForm() {
     // Password Form State
@@ -19,6 +20,10 @@ export function SettingsForm() {
 
     const handlePasswordUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (passwords.new !== passwords.confirm) {
+            toast.error("New passwords do not match.");
+            return;
+        }
         setIsUpdating(true);
         setUpdateStatus("idle");
 
@@ -26,12 +31,13 @@ export function SettingsForm() {
 
         setIsUpdating(false);
         setUpdateStatus("success");
+        toast.success("Security credentials updated successfully.");
         setTimeout(() => setUpdateStatus("idle"), 3000);
     };
 
     const handleDelete = async () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        alert("Account deleted (mock action)");
+        toast.info("Account deletion request submitted (mock action).");
     };
 
     return (

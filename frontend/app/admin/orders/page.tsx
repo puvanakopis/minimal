@@ -5,6 +5,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Order } from '@/interfaces';
 import AdminLoading from '../loading';
 
+import { toast } from 'react-toastify';
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,13 +39,15 @@ export default function AdminOrders() {
       });
 
       if (res.ok) {
+        toast.success(`Order #${id.slice(-6)} status updated to ${newStatus}`);
         fetchOrders();
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to update order status');
+        toast.error(err.error || 'Failed to update order status');
       }
     } catch (err) {
       console.error(err);
+      toast.error('An unexpected error occurred while updating status');
     }
   };
 

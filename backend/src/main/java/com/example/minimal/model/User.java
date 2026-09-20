@@ -43,6 +43,15 @@ public class User {
     @Builder.Default
     private Role role = Role.user;
 
+    @Column(name = "phone_number", length = 50)
+    private String phoneNumber;
+
+    @Column(name = "shipping_address", columnDefinition = "TEXT")
+    private String shippingAddress;
+
+    @Column(name = "avatar", columnDefinition = "LONGTEXT")
+    private String avatar;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

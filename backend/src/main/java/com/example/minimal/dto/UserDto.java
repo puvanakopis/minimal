@@ -20,6 +20,9 @@ public class UserDto {
     private String email;
     private boolean emailVerified;
     private String role;
+    private String phoneNumber;
+    private String shippingAddress;
+    private String avatar;
     private LocalDateTime createdAt;
 
     public static UserDto fromEntity(User user) {
@@ -30,6 +33,9 @@ public class UserDto {
                 .email(user.getEmail())
                 .emailVerified(user.isEmailVerified())
                 .role(user.getRole() != null ? user.getRole().name() : Role.user.name())
+                .phoneNumber(user.getPhoneNumber())
+                .shippingAddress(user.getShippingAddress())
+                .avatar(user.getAvatar())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

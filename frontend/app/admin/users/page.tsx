@@ -6,6 +6,8 @@ import { User } from '@/interfaces';
 import AdminLoading from '../loading';
 import { useAuth } from '@/context/AuthContext';
 
+import { toast } from 'react-toastify';
+
 type UserSession = User;
 
 export default function AdminUsers() {
@@ -33,7 +35,7 @@ export default function AdminUsers() {
 
   const handleRoleToggle = async (userItem: UserSession) => {
     if (userItem.email === currentUser?.email) {
-      alert('Cannot change your own role.');
+      toast.warning('Cannot change your own role.');
       return;
     }
 
@@ -48,19 +50,21 @@ export default function AdminUsers() {
       });
 
       if (res.ok) {
+        toast.success(`User role updated to ${newRole}`);
         fetchUsers();
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to update user role');
+        toast.error(err.error || 'Failed to update user role');
       }
     } catch (err) {
       console.error(err);
+      toast.error('An unexpected error occurred');
     }
   };
 
   const handleDeleteUser = async (id: string | number, email: string) => {
     if (email === currentUser?.email) {
-      alert('Cannot delete your own account.');
+      toast.warning('Cannot delete your own account.');
       return;
     }
 
@@ -69,13 +73,15 @@ export default function AdminUsers() {
     try {
       const res = await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
+        toast.success(`User ${email} successfully deleted.`);
         fetchUsers();
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to delete user');
+        toast.error(err.error || 'Failed to delete user');
       }
     } catch (err) {
       console.error(err);
+      toast.error('An unexpected error occurred while deleting user');
     }
   };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import LogoIcon from './LogoIcon'
 import useNavigateTo from '@/hooks/useNavigateTo'
 import { useAuth } from '@/context/AuthContext'
@@ -163,11 +164,22 @@ export default function Header() {
                                     navigateTo('/login', true)
                                 }
                             }}
-                            className="flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition"
+                            className="relative flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition overflow-hidden"
                         >
-                            <span className="material-symbols-outlined text-[20px]">
-                                person
-                            </span>
+                            {user?.avatar ? (
+                                <Image
+                                    src={user.avatar}
+                                    alt="Avatar"
+                                    fill
+                                    unoptimized={user.avatar.startsWith('data:')}
+                                    className="object-cover"
+                                    sizes="40px"
+                                />
+                            ) : (
+                                <span className="material-symbols-outlined text-[20px]">
+                                    person
+                                </span>
+                            )}
                         </button>
 
                         {/* DROPDOWN MENU */}
@@ -179,14 +191,28 @@ export default function Header() {
                                     }`}
                             >
                                 {/* USER INFO */}
-                                <div className="px-5 py-4 border-b border-gray-100">
-                                    <h3 className="text-sm font-bold text-black">
-                                        {user.firstName} {user.lastName}
-                                    </h3>
+                                <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                                    {user.avatar && (
+                                        <div className="relative size-10 rounded-full overflow-hidden shrink-0 border border-gray-200">
+                                            <Image
+                                                src={user.avatar}
+                                                alt="Avatar"
+                                                fill
+                                                unoptimized={user.avatar.startsWith('data:')}
+                                                className="object-cover"
+                                                sizes="40px"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-sm font-bold text-black truncate">
+                                            {user.firstName} {user.lastName}
+                                        </h3>
 
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {user.email}
-                                    </p>
+                                        <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                            {user.email}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {/* MENU ITEMS */}

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export function PaymentForm({ onProcessingChange }: { onProcessingChange: (processing: boolean) => void }) {
     const stripe = useStripe();
@@ -44,11 +45,13 @@ export function PaymentForm({ onProcessingChange }: { onProcessingChange: (proce
             });
 
             if (error) {
-                setError(error.message || "An unexpected error occurred");
+                const message = error.message || "An unexpected error occurred";
+                setError(message);
+                toast.error(message);
                 onProcessingChange(false);
             } else {
                 console.log('[PaymentMethod]', paymentMethod);
-                alert("Payment information submitted successfully!");
+                toast.success("Payment information submitted successfully!");
                 onProcessingChange(false);
             }
         }
