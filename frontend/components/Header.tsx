@@ -171,7 +171,7 @@ export default function Header() {
                                     src={user.avatar}
                                     alt="Avatar"
                                     fill
-                                    unoptimized={user.avatar.startsWith('data:')}
+                                    unoptimized={user.avatar.startsWith('data:') || user.avatar.startsWith('blob:') || user.avatar.startsWith('/uploads/')}
                                     className="object-cover"
                                     sizes="40px"
                                 />
@@ -198,7 +198,7 @@ export default function Header() {
                                                 src={user.avatar}
                                                 alt="Avatar"
                                                 fill
-                                                unoptimized={user.avatar.startsWith('data:')}
+                                                unoptimized={user.avatar.startsWith('data:') || user.avatar.startsWith('blob:') || user.avatar.startsWith('/uploads/')}
                                                 className="object-cover"
                                                 sizes="40px"
                                             />

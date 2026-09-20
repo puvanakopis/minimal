@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        com.example.minimal.model.Role role = user.getRole() != null ? user.getRole() : com.example.minimal.model.Role.user;
+        User.Role role = user.getRole() != null ? user.getRole() : User.Role.user;
         String authority = "ROLE_" + role.name().toUpperCase();
 
         return new org.springframework.security.core.userdetails.User(

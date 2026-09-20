@@ -2,12 +2,33 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { FavoriteProductCard } from "./FavoriteProductCard";
-import { allProducts } from "@/data/products";
-import { useState } from "react";
+import { productService } from "@/services";
+import { Product } from "@/interfaces";
+import { useState, useEffect } from "react";
 
 export function FavoriteGrid() {
-    // Mocking favorites by selecting a few products
-    const [favorites, setFavorites] = useState(allProducts.slice(0, 3));
+    const [favorites, setFavorites] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let isMounted = true;
+        async function loadFavorites() {
+            try {
+                const res = await productService.getProducts();
+                if (isMounted && res.success && res.data) {
+                    setFavorites(res.data.slice(0, 3));
+                }
+            } catch (err) {
+                console.error('Failed to fetch favorite products:', err);
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        }
+        loadFavorites();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleRemove = (id: number) => {
         setFavorites((prev) => prev.filter((p) => p.id !== id));

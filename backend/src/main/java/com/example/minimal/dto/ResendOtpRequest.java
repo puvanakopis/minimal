@@ -1,6 +1,6 @@
 package com.example.minimal.dto;
 
-import com.example.minimal.model.OtpPurpose;
+import com.example.minimal.model.Otp.OtpPurpose;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

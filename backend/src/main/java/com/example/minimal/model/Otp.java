@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "otps", indexes = {
-    @Index(name = "idx_otps_email_purpose", columnList = "email, purpose")
+        @Index(name = "idx_otps_email_purpose", columnList = "email, purpose")
 })
 @Data
 @NoArgsConstructor
@@ -49,5 +49,11 @@ public class Otp {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    // NESTED ENUM: OtpPurpose
+    public enum OtpPurpose {
+        ACCOUNT_VERIFICATION,
+        PASSWORD_RESET
     }
 }

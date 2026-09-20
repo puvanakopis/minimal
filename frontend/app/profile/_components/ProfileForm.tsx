@@ -21,6 +21,7 @@ export function ProfileForm() {
     });
 
     const [profileImage, setProfileImage] = useState<string>(DEFAULT_AVATAR);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
     const [statusMessage, setStatusMessage] = useState<string>("");
@@ -61,13 +62,8 @@ export function ProfileForm() {
             return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            if (reader.result) {
-                setProfileImage(reader.result as string);
-            }
-        };
-        reader.readAsDataURL(file);
+        setAvatarFile(file);
+        setProfileImage(URL.createObjectURL(file));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -78,16 +74,27 @@ export function ProfileForm() {
         setStatusMessage("");
 
         try {
+            let finalAvatar = profileImage;
+
+            if (avatarFile) {
+                const uploadRes = await userService.uploadAvatar(avatarFile);
+                if (!uploadRes.success || !uploadRes.data?.avatarUrl) {
+                    throw new Error(uploadRes.message || "Failed to upload avatar image");
+                }
+                finalAvatar = uploadRes.data.avatarUrl;
+            }
+
             const res = await userService.updateProfile({
                 firstName: formData.firstName.trim(),
                 lastName: formData.lastName.trim(),
                 phoneNumber: formData.phone.trim(),
                 shippingAddress: formData.address.trim(),
-                avatar: profileImage,
+                avatar: finalAvatar,
             });
 
             if (res.success && res.data) {
                 setUser(res.data);
+                setAvatarFile(null);
                 setSaveStatus("success");
                 setStatusMessage("Profile updated successfully!");
             } else {
@@ -148,7 +155,7 @@ export function ProfileForm() {
                                 src={profileImage || DEFAULT_AVATAR}
                                 alt="Profile photo"
                                 fill
-                                unoptimized={profileImage.startsWith("data:")}
+                                unoptimized={profileImage.startsWith("data:") || profileImage.startsWith("blob:") || profileImage.startsWith("/uploads/")}
                                 className="object-cover grayscale hover:grayscale-0 transition-all duration-1000 ease-in-out scale-105 hover:scale-100"
                                 sizes="(max-width: 192px) 100vw, 192px"
                             />

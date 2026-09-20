@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { getImageUrl } from "@/helper/image";
 
 interface FavoriteProductCardProps {
     id: number;
@@ -42,9 +43,10 @@ export function FavoriteProductCard({
             {/* Image Container */}
             <div className="relative size-24 md:size-32 overflow-hidden rounded-lg bg-background-light flex-shrink-0">
                 <Image
-                    src={image}
+                    src={getImageUrl(image)}
                     alt={title}
                     fill
+                    unoptimized
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
             </div>

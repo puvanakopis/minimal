@@ -1,7 +1,7 @@
 package com.example.minimal.dto;
 
-import com.example.minimal.model.Role;
 import com.example.minimal.model.User;
+import com.example.minimal.model.User.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

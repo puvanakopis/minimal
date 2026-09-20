@@ -2,11 +2,12 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { getImageUrl } from '@/helper/image'
 
 interface ProductCardProps {
     id: number
     title: string
-    color: string
+    color?: string
     price: number
     image: string
 }
@@ -32,8 +33,9 @@ export default function ProductCard({ id, title, color, price, image }: ProductC
             <div className="relative aspect-[4/5] bg-background-light overflow-hidden mb-4">
                 <Image
                     alt={title}
-                    src={image}
+                    src={getImageUrl(image)}
                     fill
+                    unoptimized
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="hover-actions absolute inset-0 bg-black/5 flex flex-col justify-end p-4 opacity-0 transition-all duration-300 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0">

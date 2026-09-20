@@ -1,7 +1,7 @@
 package com.example.minimal;
 
-import com.example.minimal.model.Role;
 import com.example.minimal.model.User;
+import com.example.minimal.model.User.Role;
 import com.example.minimal.repository.UserRepository;
 import com.example.minimal.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,5 +99,22 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testUploadAvatar_Success() throws Exception {
+        org.springframework.mock.web.MockMultipartFile mockFile = new org.springframework.mock.web.MockMultipartFile(
+                "file",
+                "avatar.png",
+                "image/png",
+                "dummy image content".getBytes()
+        );
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/user/upload-avatar")
+                        .file(mockFile)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.avatarUrl").exists());
     }
 }

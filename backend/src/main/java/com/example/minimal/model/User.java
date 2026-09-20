@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_users_email", columnList = "email", unique = true)
+        @Index(name = "idx_users_email", columnList = "email", unique = true)
 })
 @Data
 @NoArgsConstructor
@@ -67,5 +67,11 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // NESTED ENUM: Role
+    public enum Role {
+        user,
+        admin
     }
 }

@@ -1,40 +1,36 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import ProductCard from '../../components/ProductCard'
-
-const products = [
-    {
-        id: 1,
-        title: 'Structured Wool Overcoat',
-        color: 'Camel Taupe',
-        price: 450.0,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDtguZAV7TBALXLtTufILyZZSf6xZS7-FAWar0pFGdHw81JRdTFDvsVNwGzi57CpHS1cOkvWi4N5Sb1nr_F7PjKkgfe4nu5ZF6M32Zd5pQ5kiMdMICAOy9lkvnmfRFo5A1Jl_zY9CGNLa2Mvbmmkqv3o_rIttcvyZf1yTFnxEbTUZgFRJNHfWho98bcNGsphyVGdmUGCdBuLLmPMwm-IDq7YHN5Uw-16SYW2p4w46XYxFrY6t0EOmGfoL0GS3nMJjcz6O6F5x6VySzE',
-    },
-    {
-        id: 2,
-        title: 'Pima Cotton Capsule Tee',
-        color: 'Pristine White',
-        price: 65.0,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFfEXdLOobvy4SRYxnJBWoUp7RT-yAPzzxFmBeBmW2kpipxFmX9EzshjdkL4o5iy7KVxSnQXQc47Hz0Dlk8p_H9h63qIimN97JwTi7UCj0mmBa7oJRmeLSIuxwTH43imRMcDv2DJ4IzrJHva6cafhZtWY5aS_Ir3jATghtSXkW7SjcZhZWXJDk-ubt9j_qTU9182qXaIK5cM8dKRsb5_meNqMvc1VsIAaJ4PE_r456ITS4-LOCl__PnQDxoOPRxmbFOVM9t9Fr789b',
-    },
-    {
-        id: 3,
-        title: 'Raw Selvedge Denim',
-        color: 'Indigo Wash',
-        price: 185.0,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBEJdtkthRNwQ0GOEkyVsi9MtMOxr7jk5OcgitCK-fbOEVovDDtu3TXJb2rhV4OUsg0wjfnz7GHc2SyxmIm_TcmFo3FdYoYfMfS0rOW_AFHLERCuR5O-FU6oYRiWFwpckIVrrXN2LdqdJwiuj2royCRAvB4Sqdrs4u7QqpMQH-s74hXPdkWJ_3c5AhwEYV6N2d52qAhw1Nr68hXfKNGeadMQmamYDJsQkNomAobOBh3EkM77ShWMoZvACotu6IjTx485iSycVKQ4-Xh',
-    },
-    {
-        id: 4,
-        title: 'Silk Blend Lounge Set',
-        color: 'Mist Grey',
-        price: 210.0,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB2jjINy6X9ZmAL4TH-7YZv-jAgM_DqAMy5Qi-pLg2WQMKDfgkZCbrbIbaGZ_Bga_TcYvpHAr3lifqniq4w2QOfFeiyPuCMosLCCBZ_HjaaT7pwxS9s48nF2zz22_ic3IEbtbGojgJR9lDAhajnBAVWDQT3In_cQC2EBfnbNUQ3fM4cVQycrlvZ6tlbjNuHMTp2f3EY1p59GroL9sxakiADc1SSJL5EeB6DzfTPT9_qO81t3iClmClubUMQzTXltq53rc8Z6N6ySN-G',
-    },
-]
+import { productService } from '@/services'
+import { Product } from '@/interfaces'
 
 export default function FeaturedProducts() {
+    const [products, setProducts] = useState<Product[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        let isMounted = true
+        async function loadFeaturedProducts() {
+            try {
+                const response = await productService.getProducts()
+                if (isMounted && response.success && response.data) {
+                    setProducts(response.data.slice(0, 4))
+                }
+            } catch (err) {
+                console.error('Failed to load featured products:', err)
+            } finally {
+                if (isMounted) setLoading(false)
+            }
+        }
+        loadFeaturedProducts()
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
     return (
         <section className="bg-white">
             <div className="max-w-7xl mx-auto px-10 py-24">
@@ -49,21 +45,47 @@ export default function FeaturedProducts() {
                         <h2 className="text-sm font-bold text-brand-teal uppercase tracking-[0.3em]">Trending Now</h2>
                         <p className="text-4xl font-serif italic">Featured Essentials</p>
                     </div>
-                    <a className="text-sm font-bold border-b-2 border-brand-teal pb-1 hover:text-brand-teal transition-colors uppercase tracking-widest" href="#">View All</a>
+                    <Link className="text-sm font-bold border-b-2 border-brand-teal pb-1 hover:text-brand-teal transition-colors uppercase tracking-widest" href="/shop">
+                        View All
+                    </Link>
                 </motion.div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {products.map((product, index) => (
-                        <motion.div
-                            key={product.title}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8, delay: index * 0.15 }}
-                        >
-                            <ProductCard {...product} />
-                        </motion.div>
-                    ))}
-                </div>
+
+                {loading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {[1, 2, 3, 4].map((n) => (
+                            <div key={n} className="animate-pulse space-y-4">
+                                <div className="aspect-[4/5] bg-gray-100 rounded-lg"></div>
+                                <div className="h-4 bg-gray-100 rounded w-3/4 mx-auto"></div>
+                                <div className="h-3 bg-gray-100 rounded w-1/2 mx-auto"></div>
+                                <div className="h-4 bg-gray-100 rounded w-1/4 mx-auto"></div>
+                            </div>
+                        ))}
+                    </div>
+                ) : products.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {products.map((product, index) => (
+                            <motion.div
+                                key={product.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, delay: index * 0.15 }}
+                            >
+                                <ProductCard
+                                    id={product.id}
+                                    title={product.name}
+                                    color={product.colors?.[0]?.name || 'Standard'}
+                                    price={product.price}
+                                    image={product.image || product.mainImage || ''}
+                                />
+                            </motion.div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-12 text-[#4e8b97] italic">
+                        No products available at the moment.
+                    </div>
+                )}
             </div>
         </section>
     )

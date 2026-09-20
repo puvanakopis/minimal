@@ -2,9 +2,9 @@ package com.example.minimal.service;
 
 import com.example.minimal.dto.*;
 import com.example.minimal.exception.AppException;
-import com.example.minimal.model.OtpPurpose;
-import com.example.minimal.model.Role;
+import com.example.minimal.model.Otp.OtpPurpose;
 import com.example.minimal.model.User;
+import com.example.minimal.model.User.Role;
 import com.example.minimal.repository.UserRepository;
 import com.example.minimal.security.JwtService;
 import lombok.RequiredArgsConstructor;

@@ -9,4 +9,10 @@ export const userService = {
   updateProfile: (data: UpdateProfilePayload): Promise<ApiResponse<User>> => {
     return apiClient.put<User>('/api/user/profile', data);
   },
+
+  uploadAvatar: (file: File): Promise<ApiResponse<{ avatarUrl: string }>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.upload<{ avatarUrl: string }>('/api/user/upload-avatar', formData);
+  },
 };

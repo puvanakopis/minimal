@@ -2,7 +2,7 @@ package com.example.minimal.service;
 
 import com.example.minimal.exception.AppException;
 import com.example.minimal.model.Otp;
-import com.example.minimal.model.OtpPurpose;
+import com.example.minimal.model.Otp.OtpPurpose;
 import com.example.minimal.repository.OtpRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

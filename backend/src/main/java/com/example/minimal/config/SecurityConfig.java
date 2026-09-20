@@ -47,7 +47,9 @@ public class SecurityConfig {
                                 "/api/auth/logout",
                                 "/hello",
                                 "/error",
-                                "/h2-console/**"
+                                "/h2-console/**",
+                                "/api/products/**",
+                                "/uploads/**"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

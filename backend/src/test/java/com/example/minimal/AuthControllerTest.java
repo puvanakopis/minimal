@@ -90,7 +90,7 @@ class AuthControllerTest {
                 .email("bob@example.com")
                 .password(passwordEncoder.encode("Password123!"))
                 .emailVerified(true)
-                .role(com.example.minimal.model.Role.user)
+                .role(User.Role.user)
                 .build();
         userRepository.save(user);
 
