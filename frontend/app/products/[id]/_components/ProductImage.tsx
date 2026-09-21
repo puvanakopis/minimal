@@ -65,6 +65,7 @@ export default function ProductImage({ product }: ProductImageProps) {
             src={getImageUrl(currentImage)}
             alt={product.name}
             fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             unoptimized
             className={`
               object-cover transition-transform duration-500

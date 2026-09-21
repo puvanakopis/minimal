@@ -1,31 +1,36 @@
 package com.example.minimal.controller;
 
+import com.example.minimal.dto.AdminUpdateUserRequest;
 import com.example.minimal.dto.ApiResponse;
 import com.example.minimal.dto.UpdateProfileRequest;
 import com.example.minimal.dto.UserDto;
+import com.example.minimal.service.FileStorageService;
 import com.example.minimal.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import com.example.minimal.service.FileStorageService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final FileStorageService fileStorageService;
 
-    @GetMapping("/profile")
+    // ==========================================
+    // USER PROFILE & AVATAR ENDPOINTS
+    // ==========================================
+
+    @GetMapping("/api/user/profile")
     public ResponseEntity<ApiResponse<UserDto>> getProfile(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -36,7 +41,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Profile fetched successfully", userDto));
     }
 
-    @PutMapping("/profile")
+    @PutMapping("/api/user/profile")
     public ResponseEntity<ApiResponse<UserDto>> updateProfile(
             Authentication authentication,
             @Valid @RequestBody UpdateProfileRequest request
@@ -50,7 +55,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updatedUser));
     }
 
-    @PostMapping("/upload-avatar")
+    @PostMapping("/api/user/upload-avatar")
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadAvatar(
             Authentication authentication,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -73,5 +78,101 @@ public class UserController {
         response.put("avatarUrl", avatarUrl);
         response.put("imageUrl", avatarUrl);
         return ResponseEntity.ok(ApiResponse.success("Avatar uploaded successfully", response));
+    }
+
+    // ==========================================
+    // ADMIN USER MANAGEMENT ENDPOINTS
+    // ==========================================
+
+    @GetMapping("/api/admin/users")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
+        List<UserDto> users = userService.getAllUsersAdmin();
+        return ResponseEntity.ok(ApiResponse.success("Users fetched successfully", users));
+    }
+
+    @GetMapping("/api/admin/users/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable("id") Long id) {
+        UserDto user = userService.getUserByIdAdmin(id);
+        return ResponseEntity.ok(ApiResponse.success("User fetched successfully", user));
+    }
+
+    @PutMapping("/api/admin/users/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<UserDto>> updateUser(
+            @PathVariable("id") Long id,
+            @RequestBody AdminUpdateUserRequest request,
+            Authentication authentication
+    ) {
+        String currentAdminEmail = authentication != null ? authentication.getName() : null;
+        UserDto updated = userService.updateUserAdmin(id, request, currentAdminEmail);
+        return ResponseEntity.ok(ApiResponse.success("User updated successfully", updated));
+    }
+
+    @PutMapping("/api/admin/users")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<UserDto>> updateUserWithoutPathId(
+            @RequestBody AdminUpdateUserRequest request,
+            Authentication authentication
+    ) {
+        if (request.getId() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("User ID is required"));
+        }
+        String currentAdminEmail = authentication != null ? authentication.getName() : null;
+        UserDto updated = userService.updateUserAdmin(request.getId(), request, currentAdminEmail);
+        return ResponseEntity.ok(ApiResponse.success("User updated successfully", updated));
+    }
+
+    @PutMapping("/api/admin/users/{id}/block")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<UserDto>> toggleBlockUser(
+            @PathVariable("id") Long id,
+            @RequestBody(required = false) Map<String, Boolean> body,
+            @RequestParam(value = "blocked", required = false) Boolean blockedParam,
+            Authentication authentication
+    ) {
+        Boolean blocked = blockedParam;
+        if (blocked == null && body != null && body.containsKey("blocked")) {
+            blocked = body.get("blocked");
+        }
+
+        String currentAdminEmail = authentication != null ? authentication.getName() : null;
+        UserDto updated = userService.toggleBlockUserAdmin(id, blocked, currentAdminEmail);
+        String msg = updated.isBlocked() ? "User blocked successfully" : "User unblocked successfully";
+        return ResponseEntity.ok(ApiResponse.success(msg, updated));
+    }
+
+    @PatchMapping("/api/admin/users/{id}/block")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<UserDto>> patchBlockUser(
+            @PathVariable("id") Long id,
+            @RequestBody(required = false) Map<String, Boolean> body,
+            @RequestParam(value = "blocked", required = false) Boolean blockedParam,
+            Authentication authentication
+    ) {
+        return toggleBlockUser(id, body, blockedParam, authentication);
+    }
+
+    @DeleteMapping("/api/admin/users/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<Void>> deleteUserById(
+            @PathVariable("id") Long id,
+            Authentication authentication
+    ) {
+        String currentAdminEmail = authentication != null ? authentication.getName() : null;
+        userService.deleteUserAdmin(id, currentAdminEmail);
+        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
+    }
+
+    @DeleteMapping("/api/admin/users")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
+    public ResponseEntity<ApiResponse<Void>> deleteUserByParam(
+            @RequestParam("id") Long id,
+            Authentication authentication
+    ) {
+        String currentAdminEmail = authentication != null ? authentication.getName() : null;
+        userService.deleteUserAdmin(id, currentAdminEmail);
+        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
     }
 }

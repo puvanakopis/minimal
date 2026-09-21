@@ -3,6 +3,7 @@ import ProductImage from './_components/ProductImage';
 import ProductDetails from './_components/ProductDetails';
 import { productService } from '@/services';
 import { Product } from '@/interfaces';
+import { allProducts } from '@/data/products';
 
 interface ProductPageProps {
   params: Promise<{
@@ -29,7 +30,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
       }
     }
   } catch (error) {
-    console.error('Error fetching product:', error);
+    console.warn('Error fetching product from backend, attempting fallback:', error);
+  }
+
+  if (!product) {
+    if (/^\d+$/.test(idOrSlug)) {
+      product = allProducts.find((p) => p.id === Number(idOrSlug)) || null;
+    } else {
+      product = allProducts.find((p) => p.slug === idOrSlug) || null;
+    }
   }
 
   if (!product) {

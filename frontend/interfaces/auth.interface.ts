@@ -5,10 +5,23 @@ export interface User {
   email: string;
   emailVerified: boolean;
   role: 'user' | 'admin' | string;
+  blocked?: boolean;
   phoneNumber?: string;
   shippingAddress?: string;
   avatar?: string;
   createdAt?: string;
+}
+
+export interface AdminUpdateUserPayload {
+  id?: number | string;
+  firstName?: string;
+  lastName?: string;
+  role?: 'user' | 'admin' | string;
+  blocked?: boolean;
+  emailVerified?: boolean;
+  phoneNumber?: string;
+  shippingAddress?: string;
+  avatar?: string;
 }
 
 export interface UpdateProfilePayload {

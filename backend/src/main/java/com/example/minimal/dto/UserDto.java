@@ -20,6 +20,7 @@ public class UserDto {
     private String email;
     private boolean emailVerified;
     private String role;
+    private boolean blocked;
     private String phoneNumber;
     private String shippingAddress;
     private String avatar;
@@ -33,6 +34,7 @@ public class UserDto {
                 .email(user.getEmail())
                 .emailVerified(user.isEmailVerified())
                 .role(user.getRole() != null ? user.getRole().name() : Role.user.name())
+                .blocked(user.isBlocked())
                 .phoneNumber(user.getPhoneNumber())
                 .shippingAddress(user.getShippingAddress())
                 .avatar(user.getAvatar())

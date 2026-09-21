@@ -51,6 +51,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     if (error instanceof ApiError) {
       throw error;
     }
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      throw new ApiError('Request timed out. Please verify that the backend server is running.');
+    }
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError('Request was aborted.');
+    }
     const message = error instanceof Error ? error.message : 'Network error. Please check your connection.';
     throw new ApiError(message);
   }

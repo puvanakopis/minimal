@@ -94,6 +94,10 @@ public class AuthService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("Invalid email or password", HttpStatus.UNAUTHORIZED));
 
+        if (user.isBlocked()) {
+            throw new AppException("Your account has been blocked. Please contact support.", HttpStatus.FORBIDDEN);
+        }
+
         if (!user.isEmailVerified()) {
             throw new AppException("Your email is not verified. Please verify your email first.", HttpStatus.FORBIDDEN);
         }

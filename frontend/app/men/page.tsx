@@ -9,6 +9,8 @@ import Filter from '@/app/men/_components/Filter';
 import { productService } from '@/services';
 import { Product } from '@/interfaces';
 
+import { allProducts } from '@/data/products';
+
 const PRODUCTS_PER_PAGE = 6;
 
 export default function MenShop() {
@@ -38,11 +40,16 @@ export default function MenShop() {
                     gender: 'men',
                     sortBy,
                 });
-                if (isMounted && response.success && response.data) {
+                if (isMounted && response.success && response.data && response.data.length > 0) {
                     setProducts(response.data);
+                } else if (isMounted) {
+                    setProducts(allProducts.filter((p) => p.gender === 'men' || p.gender === 'unisex'));
                 }
             } catch (err) {
-                console.error('Failed to fetch men products:', err);
+                console.warn('Failed to fetch men products, using fallback data:', err);
+                if (isMounted) {
+                    setProducts(allProducts.filter((p) => p.gender === 'men' || p.gender === 'unisex'));
+                }
             } finally {
                 if (isMounted) setLoading(false);
             }

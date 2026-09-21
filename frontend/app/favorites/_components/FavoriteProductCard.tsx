@@ -46,6 +46,7 @@ export function FavoriteProductCard({
                     src={getImageUrl(image)}
                     alt={title}
                     fill
+                    sizes="(max-width: 768px) 96px, 128px"
                     unoptimized
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />

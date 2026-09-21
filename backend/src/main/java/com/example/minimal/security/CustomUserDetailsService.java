@@ -25,13 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
         User.Role role = user.getRole() != null ? user.getRole() : User.Role.user;
         String authority = "ROLE_" + role.name().toUpperCase();
 
+        boolean enabled = user.isEmailVerified() && !user.isBlocked();
+        boolean accountNonLocked = !user.isBlocked();
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                user.isEmailVerified(), // enabled only if email verified
+                enabled,
                 true,
                 true,
-                true,
+                accountNonLocked,
                 Collections.singletonList(new SimpleGrantedAuthority(authority))
         );
     }

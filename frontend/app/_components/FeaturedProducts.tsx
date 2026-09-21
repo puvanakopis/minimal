@@ -7,6 +7,8 @@ import ProductCard from '../../components/ProductCard'
 import { productService } from '@/services'
 import { Product } from '@/interfaces'
 
+import { allProducts } from '@/data/products'
+
 export default function FeaturedProducts() {
     const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
@@ -16,11 +18,15 @@ export default function FeaturedProducts() {
         async function loadFeaturedProducts() {
             try {
                 const response = await productService.getProducts()
-                if (isMounted && response.success && response.data) {
+                if (isMounted && response.success && response.data && response.data.length > 0) {
                     setProducts(response.data.slice(0, 4))
+                } else if (isMounted) {
+                    setProducts(allProducts.slice(0, 4))
                 }
-            } catch (err) {
-                console.error('Failed to load featured products:', err)
+            } catch {
+                if (isMounted) {
+                    setProducts(allProducts.slice(0, 4))
+                }
             } finally {
                 if (isMounted) setLoading(false)
             }

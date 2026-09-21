@@ -9,6 +9,8 @@ import Filter from '@/app/shop/_components/Filter';
 import { productService } from '@/services';
 import { Product } from '@/interfaces';
 
+import { allProducts } from '@/data/products';
+
 const PRODUCTS_PER_PAGE = 6;
 
 export default function Shop() {
@@ -36,11 +38,16 @@ export default function Shop() {
                 const response = await productService.getProducts({
                     sortBy,
                 });
-                if (isMounted && response.success && response.data) {
+                if (isMounted && response.success && response.data && response.data.length > 0) {
                     setProducts(response.data);
+                } else if (isMounted) {
+                    setProducts(allProducts);
                 }
             } catch (err) {
-                console.error('Failed to fetch products for shop:', err);
+                console.warn('Failed to fetch products for shop, using fallback data:', err);
+                if (isMounted) {
+                    setProducts(allProducts);
+                }
             } finally {
                 if (isMounted) setLoading(false);
             }

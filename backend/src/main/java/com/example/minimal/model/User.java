@@ -43,6 +43,10 @@ public class User {
     @Builder.Default
     private Role role = Role.user;
 
+    @Column(name = "blocked", nullable = false)
+    @Builder.Default
+    private boolean blocked = false;
+
     @Column(name = "phone_number", length = 50)
     private String phoneNumber;
 

@@ -18,6 +18,7 @@ export default function JournalSection() {
                         alt="The Minimal Journal"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQeDRtvXAYNLhe4WerX6gPWP3hZNaGzbCyQhDWpvewQT5NBdBQSgbTa-DfvrBu2VaHeyskcA9zzKhMrIn6QX6QyfJnVRf74pIiklGwnktxjGF-26imYY-7GkxB8zza86QMKg_VdNEgXYdb67ZIeJk6gvwjPA6mNnknK29vbOg1SLhKkmUEIDMhKp-7s67R5BJx5DtAnjjpWmvk9TaDe0jBrnviWTNMbD4m4capzhwFK40fMSl9Z93LwObV1D6o1SKioAHzZlC24Wzm"
                         fill
+                        sizes="(max-width: 1024px) 100vw, 50vw"
                         className="object-cover"
                     />
                 </motion.div>
