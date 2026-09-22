@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import LogoIcon from './LogoIcon'
+import SearchModal from './SearchModal'
 import useNavigateTo from '@/hooks/useNavigateTo'
 import { useAuth } from '@/context/AuthContext'
 import { useFavorites } from '@/context/FavoriteContext'
@@ -13,6 +14,7 @@ export default function Header() {
     const { cartCount } = useCart()
     const [menuOpen, setMenuOpen] = useState(false)
     const [profileOpen, setProfileOpen] = useState(false)
+    const [searchOpen, setSearchOpen] = useState(false)
     const { user, logout } = useAuth()
     const { favoritesCount } = useFavorites()
 
@@ -137,7 +139,13 @@ export default function Header() {
                 <div className="flex items-center gap-3 sm:gap-4 lg:gap-6">
 
                     {/* SEARCH */}
-                    <button className="hidden sm:flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition">
+                    <button
+                        type="button"
+                        onClick={() => setSearchOpen(true)}
+                        className="flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-gray-700 hover:text-primary"
+                        title="Search Products"
+                        aria-label="Search Products"
+                    >
                         <span className="material-symbols-outlined text-[20px]">
                             search
                         </span>
@@ -304,6 +312,12 @@ export default function Header() {
                     ))}
                 </div>
             )}
+
+            {/* SEARCH MODAL */}
+            <SearchModal
+                isOpen={searchOpen}
+                onClose={() => setSearchOpen(false)}
+            />
         </header>
     )
 }

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { Order } from "@/interfaces";
 import { orderService } from "@/services";
 import { getImageUrl } from "@/helper/image";
@@ -37,59 +38,6 @@ export function OrderList() {
         }
     }, [isAuthenticated, isAuthLoading]);
 
-    if (isLoading || isAuthLoading) {
-        return (
-            <div className="py-20 flex flex-col items-center justify-center gap-4">
-                <div className="w-10 h-10 border-2 border-brand-teal border-t-transparent rounded-full animate-spin" />
-                <p className="text-xs uppercase tracking-widest text-[#4e8b97] font-semibold">Loading orders...</p>
-            </div>
-        );
-    }
-
-    if (!isAuthenticated) {
-        return (
-            <div className="bg-white border border-[#e7f1f3] rounded-2xl p-12 text-center space-y-6 shadow-2xs">
-                <div className="size-16 rounded-full bg-[#f6f8f8] border border-[#e7f1f3] flex items-center justify-center mx-auto text-brand-teal">
-                    <span className="material-symbols-outlined text-3xl">lock</span>
-                </div>
-                <div className="space-y-2">
-                    <h2 className="text-2xl font-serif italic text-zinc-900">Sign in to view your orders</h2>
-                    <p className="text-xs text-[#4e8b97] uppercase tracking-wider">
-                        Please log in to track your order history, delivery statuses, and invoices.
-                    </p>
-                </div>
-                <Link
-                    href="/login"
-                    className="inline-flex items-center justify-center px-8 py-3.5 bg-brand-teal hover:bg-[#1499b5] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-md transition-all"
-                >
-                    Sign In
-                </Link>
-            </div>
-        );
-    }
-
-    if (orders.length === 0) {
-        return (
-            <div className="bg-white border border-[#e7f1f3] rounded-2xl p-12 text-center space-y-6 shadow-2xs">
-                <div className="size-16 rounded-full bg-[#f6f8f8] border border-[#e7f1f3] flex items-center justify-center mx-auto text-brand-teal">
-                    <span className="material-symbols-outlined text-3xl">receipt_long</span>
-                </div>
-                <div className="space-y-2">
-                    <h2 className="text-2xl font-serif italic text-zinc-900">No Orders Placed Yet</h2>
-                    <p className="text-xs text-[#4e8b97] uppercase tracking-wider">
-                        You haven&apos;t placed any orders yet. Discover our curated collections and place your first order.
-                    </p>
-                </div>
-                <Link
-                    href="/shop"
-                    className="inline-flex items-center justify-center px-8 py-3.5 bg-brand-teal hover:bg-[#1499b5] text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-md transition-all"
-                >
-                    Start Shopping
-                </Link>
-            </div>
-        );
-    }
-
     const getStatusColor = (status?: string) => {
         switch (status?.toLowerCase()) {
             case "delivered":
@@ -107,7 +55,7 @@ export function OrderList() {
     return (
         <div className="flex flex-col gap-12">
             {/* Header */}
-            <header className="space-y-3">
+            <header className="space-y-4">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -120,21 +68,63 @@ export function OrderList() {
                     </span>
                 </motion.div>
 
-                <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                    className="text-4xl md:text-5xl font-serif leading-tight text-zinc-900"
-                >
-                    My{" "}
-                    <span className="italic font-normal text-brand-teal">
-                        Orders
-                    </span>
-                </motion.h1>
+                <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-4xl md:text-5xl font-serif leading-tight text-zinc-900"
+                    >
+                        My{" "}
+                        <span className="italic font-normal text-brand-teal">
+                            Orders
+                        </span>
+                    </motion.h1>
+
+                    {isAuthenticated && !isLoading && !isAuthLoading && (
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                            {orders.length} {orders.length === 1 ? 'order' : 'orders'} placed
+                        </p>
+                    )}
+                </div>
             </header>
 
-            {/* Orders List */}
-            <div className="space-y-8">
+            {/* Content List */}
+            {isLoading || isAuthLoading ? (
+                <div className="py-24 flex flex-col items-center justify-center gap-4 text-center">
+                    <Loader2 className="size-8 animate-spin text-brand-teal" />
+                    <p className="text-xs uppercase tracking-[0.2em] font-bold text-gray-400">
+                        Loading your orders...
+                    </p>
+                </div>
+            ) : !isAuthenticated ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="py-20 px-6 text-center bg-white border border-[#e7f1f3] rounded-2xl flex flex-col items-center justify-center gap-4 shadow-2xs"
+                >
+                    <span className="material-symbols-outlined text-6xl text-brand-teal/40">
+                        lock
+                    </span>
+                    <div className="space-y-1 max-w-sm">
+                        <h3 className="text-xl font-serif text-zinc-900">Sign in to view your orders</h3>
+                        <p className="text-xs text-zinc-500 leading-relaxed">
+                            Please log in to track your order history, delivery statuses, and invoices.
+                        </p>
+                    </div>
+                    <Link
+                        href="/login"
+                        className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-brand-teal text-white text-xs font-bold uppercase tracking-widest hover:bg-[#1499b5] transition-all rounded-lg shadow-sm"
+                    >
+                        <span className="material-symbols-outlined text-base">login</span>
+                        Sign In
+                    </Link>
+                </motion.div>
+            ) : (
+                <AnimatePresence mode="popLayout">
+                    {orders.length > 0 ? (
+                        <div className="space-y-8">
                 {orders.map((order, idx) => (
                     <motion.div
                         key={order.id}
@@ -255,9 +245,36 @@ export function OrderList() {
                                 </Link>
                             </div>
                         </div>
-                    </motion.div>
-                ))}
-            </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="py-20 px-6 text-center bg-white border border-[#e7f1f3] rounded-2xl flex flex-col items-center justify-center gap-4"
+                        >
+                            <span className="material-symbols-outlined text-6xl text-brand-teal/40">
+                                receipt_long
+                            </span>
+                            <div className="space-y-1 max-w-sm">
+                                <h3 className="text-xl font-serif text-zinc-900">No Orders Placed Yet</h3>
+                                <p className="text-xs text-zinc-500 leading-relaxed">
+                                    You haven&apos;t placed any orders yet. Discover our curated collections and place your first order.
+                                </p>
+                            </div>
+                            <Link
+                                href="/shop"
+                                className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-brand-teal text-white text-xs font-bold uppercase tracking-widest hover:bg-[#1499b5] transition-all rounded-lg shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-base">storefront</span>
+                                Start Shopping
+                            </Link>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            )}
         </div>
     );
 }

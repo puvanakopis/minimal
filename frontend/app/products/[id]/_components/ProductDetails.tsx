@@ -40,6 +40,12 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const [reviewErrorMsg, setReviewErrorMsg] = useState('');
 
   useEffect(() => {
+    if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
+      setSelectedSize(availableSizes[0]);
+    }
+  }, [product.id, product.sizes]);
+
+  useEffect(() => {
     let isMounted = true;
     async function loadReviews() {
       if (!product.id) return;
@@ -195,10 +201,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
               {selectedSize ? `Size ${selectedSize}` : 'Please Select'}
             </span>
           </h4>
-
-          <button type="button" className="text-[10px] uppercase tracking-widest font-bold text-brand-teal border-b border-brand-teal/30 hover:border-brand-teal transition-all cursor-pointer">
-            Size Guide
-          </button>
         </div>
 
         <div className="flex flex-wrap gap-3">

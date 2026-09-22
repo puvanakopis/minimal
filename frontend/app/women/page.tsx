@@ -9,8 +9,6 @@ import Filter from '@/app/women/_components/Filter';
 import { useProducts } from '@/context';
 import { Product } from '@/interfaces';
 
-import { allProducts } from '@/data/products';
-
 const PRODUCTS_PER_PAGE = 6;
 
 export default function WomenShop() {
@@ -23,7 +21,7 @@ export default function WomenShop() {
     const [sortBy, setSortBy] = useState('newest');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedSize, setSelectedSize] = useState<string>('');
-    const [priceRange, setPriceRange] = useState<number>(100000);
+    const [priceRange, setPriceRange] = useState<number>(10000);
 
     const breadcrumbItems = [
         { label: 'Home', href: '/' },
@@ -39,15 +37,15 @@ export default function WomenShop() {
                     gender: 'women',
                     sortBy,
                 });
-                if (isMounted && response.success && response.data && response.data.length > 0) {
+                if (isMounted && response.success && response.data) {
                     setProducts(response.data);
                 } else if (isMounted) {
-                    setProducts(allProducts.filter((p) => p.gender === 'women' || p.gender === 'unisex'));
+                    setProducts([]);
                 }
             } catch (err) {
-                console.warn('Failed to fetch women products, using fallback data:', err);
+                console.error('Failed to fetch women products:', err);
                 if (isMounted) {
-                    setProducts(allProducts.filter((p) => p.gender === 'women' || p.gender === 'unisex'));
+                    setProducts([]);
                 }
             } finally {
                 if (isMounted) setLoading(false);
@@ -69,7 +67,7 @@ export default function WomenShop() {
     const handleResetFilters = () => {
         setSelectedCategories([]);
         setSelectedSize('');
-        setPriceRange(100000);
+        setPriceRange(10000);
         setCurrentPage(1);
     };
 
@@ -84,7 +82,13 @@ export default function WomenShop() {
             }
             // Size
             if (selectedSize) {
-                if (!product.sizes || !product.sizes.includes(selectedSize)) {
+                const effectiveSizes = product.sizes && product.sizes.length > 0
+                    ? product.sizes
+                    : ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                const hasMatchingSize = effectiveSizes.some(
+                    (s) => String(s).trim().toLowerCase() === selectedSize.trim().toLowerCase()
+                );
+                if (!hasMatchingSize) {
                     return false;
                 }
             }

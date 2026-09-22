@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Search, X } from 'lucide-react';
 import Pagination from '@/components/Pagination';
 import Breadcrumb from '@/components/Breadcrumb';
 import ProductGrid from '@/app/shop/_components/ProductGrid';
@@ -9,11 +11,13 @@ import Filter from '@/app/shop/_components/Filter';
 import { useProducts } from '@/context';
 import { Product } from '@/interfaces';
 
-import { allProducts } from '@/data/products';
-
 const PRODUCTS_PER_PAGE = 6;
 
-export default function Shop() {
+function ShopContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const searchQuery = searchParams.get('search') || '';
+
     const { getProducts } = useProducts();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -23,11 +27,12 @@ export default function Shop() {
     const [sortBy, setSortBy] = useState('newest');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedSize, setSelectedSize] = useState<string>('');
-    const [priceRange, setPriceRange] = useState<number>(100000);
+    const [priceRange, setPriceRange] = useState<number>(10000);
 
     const breadcrumbItems = [
         { label: 'Home', href: '/' },
-        { label: 'All Collections', href: '/shop', isActive: true },
+        { label: 'All Collections', href: '/shop', isActive: !searchQuery },
+        ...(searchQuery ? [{ label: `Search: "${searchQuery}"`, href: `/shop?search=${encodeURIComponent(searchQuery)}`, isActive: true }] : []),
     ];
 
     useEffect(() => {
@@ -37,16 +42,17 @@ export default function Shop() {
             try {
                 const response = await getProducts({
                     sortBy,
+                    search: searchQuery || undefined,
                 });
-                if (isMounted && response.success && response.data && response.data.length > 0) {
+                if (isMounted && response.success && response.data) {
                     setProducts(response.data);
                 } else if (isMounted) {
-                    setProducts(allProducts);
+                    setProducts([]);
                 }
             } catch (err) {
-                console.warn('Failed to fetch products for shop, using fallback data:', err);
+                console.error('Failed to fetch products for shop:', err);
                 if (isMounted) {
-                    setProducts(allProducts);
+                    setProducts([]);
                 }
             } finally {
                 if (isMounted) setLoading(false);
@@ -56,7 +62,11 @@ export default function Shop() {
         return () => {
             isMounted = false;
         };
-    }, [sortBy]);
+    }, [sortBy, searchQuery, getProducts]);
+
+    const handleClearSearch = () => {
+        router.push('/shop');
+    };
 
     const handleCategoryToggle = (category: string) => {
         setSelectedCategories((prev) =>
@@ -68,8 +78,11 @@ export default function Shop() {
     const handleResetFilters = () => {
         setSelectedCategories([]);
         setSelectedSize('');
-        setPriceRange(100000);
+        setPriceRange(10000);
         setCurrentPage(1);
+        if (searchQuery) {
+            router.push('/shop');
+        }
     };
 
     // Filter products based on selected criteria
@@ -83,7 +96,13 @@ export default function Shop() {
             }
             // Size filter
             if (selectedSize) {
-                if (!product.sizes || !product.sizes.includes(selectedSize)) {
+                const effectiveSizes = product.sizes && product.sizes.length > 0
+                    ? product.sizes
+                    : ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                const hasMatchingSize = effectiveSizes.some(
+                    (s) => String(s).trim().toLowerCase() === selectedSize.trim().toLowerCase()
+                );
+                if (!hasMatchingSize) {
                     return false;
                 }
             }
@@ -114,7 +133,28 @@ export default function Shop() {
                         items={breadcrumbItems}
                         className="mb-4"
                     />
-                    <h1 className="text-5xl font-serif italic tracking-tight">All Collections</h1>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <h1 className="text-5xl font-serif italic tracking-tight">
+                            {searchQuery ? `Search Results` : `All Collections`}
+                        </h1>
+
+                        {searchQuery && (
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-gray-200 shadow-2xs self-start">
+                                <Search className="w-4 h-4 text-brand-teal" />
+                                <span className="text-xs font-semibold text-gray-700">
+                                    Keyword: <strong className="text-gray-900">&ldquo;{searchQuery}&rdquo;</strong>
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleClearSearch}
+                                    className="p-0.5 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-700 transition cursor-pointer"
+                                    title="Clear search filter"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </motion.section>
 
@@ -172,5 +212,13 @@ export default function Shop() {
                 </motion.div>
             </section>
         </main>
+    );
+}
+
+export default function Shop() {
+    return (
+        <Suspense fallback={<div className="min-h-screen py-24 text-center text-gray-500">Loading shop...</div>}>
+            <ShopContent />
+        </Suspense>
     );
 }

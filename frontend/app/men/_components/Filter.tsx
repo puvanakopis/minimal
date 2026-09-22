@@ -15,14 +15,14 @@ export default function Filter({
     onCategoryChange,
     selectedSize = '',
     onSizeChange,
-    priceRange = 100000,
+    priceRange = 10000,
     onPriceChange,
     onReset,
 }: FilterProps) {
     const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
     const categories = ['Outerwear', 'Tops', 'Trousers', 'Denim', 'Knitwear', 'Accessories', 'Loungewear'];
 
-    const hasActiveFilters = selectedCategories.length > 0 || selectedSize || (priceRange && priceRange < 100000);
+    const hasActiveFilters = selectedCategories.length > 0 || selectedSize || (priceRange && priceRange < 10000);
 
     return (
         <div className="space-y-8">
@@ -32,7 +32,7 @@ export default function Filter({
                     <button
                         type="button"
                         onClick={onReset}
-                        className="text-xs text-rose-500 hover:underline font-semibold cursor-pointer"
+                        className="text-xs text-brand-teal hover:underline font-semibold cursor-pointer"
                     >
                         Reset All
                     </button>
@@ -100,8 +100,8 @@ export default function Filter({
                     <input
                         type="range"
                         min="0"
-                        max="100000"
-                        step="500"
+                        max="10000"
+                        step="250"
                         value={priceRange}
                         onChange={(e) => onPriceChange?.(Number(e.target.value))}
                         className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-[#1499b5]"

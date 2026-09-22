@@ -42,6 +42,8 @@ const CATEGORY_OPTIONS = [
   'Loungewear',
 ];
 
+const STANDARD_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'One Size'];
+
 export default function AdminProducts() {
   const {
     adminGetProducts,
@@ -70,6 +72,8 @@ export default function AdminProducts() {
   const [customCategory, setCustomCategory] = useState<string>('');
   const [gender, setGender] = useState<'men' | 'women'>('men');
   const [imagesList, setImagesList] = useState<ImageEntry[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(['XS', 'S', 'M', 'L', 'XL', 'XXL']);
+  const [customSizeInput, setCustomSizeInput] = useState('');
   const [description, setDescription] = useState('');
 
   const [formError, setFormError] = useState('');
@@ -152,6 +156,8 @@ export default function AdminProducts() {
     setCustomCategory('');
     setGender('men');
     setImagesList([]);
+    setSelectedSizes(['XS', 'S', 'M', 'L', 'XL', 'XXL']);
+    setCustomSizeInput('');
     setDescription('');
     setFormError('');
     setShowAddModal(true);
@@ -189,8 +195,43 @@ export default function AdminProducts() {
     }
 
     setImagesList(initialImages);
+    setSelectedSizes(
+      product.sizes && product.sizes.length > 0
+        ? product.sizes.map((s) => String(s).trim()).filter(Boolean)
+        : ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+    );
+    setCustomSizeInput('');
     setDescription(product.description || '');
     setFormError('');
+  };
+
+  const handleToggleSize = (size: string) => {
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+    );
+  };
+
+  const handleAddCustomSize = () => {
+    const trimmed = customSizeInput.trim().toUpperCase();
+    if (!trimmed) return;
+    if (selectedSizes.includes(trimmed)) {
+      setCustomSizeInput('');
+      return;
+    }
+    setSelectedSizes((prev) => [...prev, trimmed]);
+    setCustomSizeInput('');
+  };
+
+  const handleRemoveSize = (sizeToRemove: string) => {
+    setSelectedSizes((prev) => prev.filter((s) => s !== sizeToRemove));
+  };
+
+  const handleSelectAllStandardSizes = () => {
+    setSelectedSizes(['XS', 'S', 'M', 'L', 'XL', 'XXL']);
+  };
+
+  const handleClearAllSizes = () => {
+    setSelectedSizes([]);
   };
 
   const handleOpenViewModal = (product: Product) => {
@@ -287,6 +328,7 @@ export default function AdminProducts() {
         image: primaryImage,
         mainImage: primaryImage,
         images: uploadedUrls,
+        sizes: selectedSizes,
         description,
       });
 
@@ -351,6 +393,7 @@ export default function AdminProducts() {
         image: primaryImage,
         mainImage: primaryImage,
         images: finalImageUrls,
+        sizes: selectedSizes,
         description,
       });
 
@@ -555,6 +598,20 @@ export default function AdminProducts() {
                                 {totalImages} {totalImages === 1 ? 'img' : 'imgs'}
                               </span>
                             </div>
+                            {product.sizes && product.sizes.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1 mt-1">
+                                {product.sizes.slice(0, 4).map((s, idx) => (
+                                  <span key={idx} className="text-[9px] font-semibold text-gray-600 bg-gray-100/90 px-1.5 py-0.2 rounded">
+                                    {s}
+                                  </span>
+                                ))}
+                                {product.sizes.length > 4 && (
+                                  <span className="text-[9px] font-semibold text-brand-teal">
+                                    +{product.sizes.length - 4}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -969,6 +1026,104 @@ export default function AdminProducts() {
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* AVAILABLE SIZES MANAGEMENT */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                    Available Sizes ({selectedSizes.length})
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSelectAllStandardSizes}
+                      className="text-[10px] text-brand-teal font-semibold hover:underline cursor-pointer"
+                    >
+                      All Standard
+                    </button>
+                    <span className="text-gray-300">•</span>
+                    <button
+                      type="button"
+                      onClick={handleClearAllSizes}
+                      className="text-[10px] text-gray-400 font-semibold hover:text-rose-500 hover:underline cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+
+                {/* Standard Preset Size Toggles */}
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {STANDARD_SIZES.map((size) => {
+                    const isSelected = selectedSizes.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleToggleSize(size)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-brand-teal text-white border-brand-teal shadow-2xs font-bold'
+                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-brand-teal hover:bg-brand-teal/5'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Size Adder */}
+                <div className="flex gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={customSizeInput}
+                    onChange={(e) => setCustomSizeInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomSize();
+                      }
+                    }}
+                    placeholder="Custom size (e.g. 28, 30, 32, 34, 40)"
+                    className="flex-1 text-xs px-3 py-1.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-teal"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomSize}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-brand-teal hover:text-white text-gray-700 text-xs font-semibold rounded-xl border border-gray-200 hover:border-brand-teal transition-all cursor-pointer"
+                  >
+                    + Add Size
+                  </button>
+                </div>
+
+                {/* Active Selected Sizes List */}
+                {selectedSizes.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 mr-1">Active:</span>
+                    {selectedSizes.map((s) => (
+                      <span
+                        key={s}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-teal/10 border border-brand-teal/20 text-brand-teal text-[11px] font-semibold"
+                      >
+                        <span>{s}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSize(s)}
+                          className="hover:text-rose-500 cursor-pointer text-brand-teal/70 hover:bg-rose-50 rounded"
+                          title={`Remove size ${s}`}
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-200/60">
+                    No sizes selected. Standard sizes (XS–XXL) will be enabled by default.
+                  </p>
+                )}
               </div>
 
               {/* DESCRIPTION */}

@@ -9,8 +9,6 @@ import Filter from '@/app/men/_components/Filter';
 import { useProducts } from '@/context';
 import { Product } from '@/interfaces';
 
-import { allProducts } from '@/data/products';
-
 const PRODUCTS_PER_PAGE = 6;
 
 export default function MenShop() {
@@ -23,7 +21,7 @@ export default function MenShop() {
     const [sortBy, setSortBy] = useState('newest');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedSize, setSelectedSize] = useState<string>('');
-    const [priceRange, setPriceRange] = useState<number>(100000);
+    const [priceRange, setPriceRange] = useState<number>(10000);
 
     const breadcrumbItems = [
         { label: 'Home', href: '/' },
@@ -40,15 +38,15 @@ export default function MenShop() {
                     gender: 'men',
                     sortBy,
                 });
-                if (isMounted && response.success && response.data && response.data.length > 0) {
+                if (isMounted && response.success && response.data) {
                     setProducts(response.data);
                 } else if (isMounted) {
-                    setProducts(allProducts.filter((p) => p.gender === 'men' || p.gender === 'unisex'));
+                    setProducts([]);
                 }
             } catch (err) {
-                console.warn('Failed to fetch men products, using fallback data:', err);
+                console.error('Failed to fetch men products:', err);
                 if (isMounted) {
-                    setProducts(allProducts.filter((p) => p.gender === 'men' || p.gender === 'unisex'));
+                    setProducts([]);
                 }
             } finally {
                 if (isMounted) setLoading(false);
@@ -70,7 +68,7 @@ export default function MenShop() {
     const handleResetFilters = () => {
         setSelectedCategories([]);
         setSelectedSize('');
-        setPriceRange(100000);
+        setPriceRange(10000);
         setCurrentPage(1);
     };
 
@@ -85,7 +83,13 @@ export default function MenShop() {
             }
             // Size
             if (selectedSize) {
-                if (!product.sizes || !product.sizes.includes(selectedSize)) {
+                const effectiveSizes = product.sizes && product.sizes.length > 0
+                    ? product.sizes
+                    : ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                const hasMatchingSize = effectiveSizes.some(
+                    (s) => String(s).trim().toLowerCase() === selectedSize.trim().toLowerCase()
+                );
+                if (!hasMatchingSize) {
                     return false;
                 }
             }
