@@ -1,50 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { OrderSummary } from "./_components/OrderSummary";
 import { PaymentForm } from "./_components/PaymentForm";
+import { useCart, useCheckout } from "@/context";
 
-// Replace with your actual publishable key
-const stripePromise = loadStripe("pk_test_placeholder");
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY || "pk_test_placeholder");
 
 export default function PaymentPage() {
-    const [isProcessing, setIsProcessing] = useState(false);
+    const router = useRouter();
+    const { cart, isLoading } = useCart();
+    const { isSubmittingOrder } = useCheckout();
 
-    // This would typically come from a cart context or state management
-    const cartItems = [
-        {
-            id: "1",
-            name: "Structured Wool Overcoat",
-            colorSize: "Camel Taupe / Size S",
-            price: 450.0,
-            quantity: 1,
-            image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtguZAV7TBALXLtTufILyZZSf6xZS7-FAWar0pFGdHw81JRdTFDvsVNwGzi57CpHS1cOkvWi4N5Sb1nr_F7PjKkgfe4nu5ZF6M32Zd5pQ5kiMdMICAOy9lkvnmfRFo5A1Jl_zY9CGNLa2Mvbmmkqv3o_rIttcvyZf1yTFnxEbTUZgFRJNHfWho98bcNGsphyVGdmUGCdBuLLmPMwm-IDq7YHN5Uw-16SYW2p4w46XYxFrY6t0EOmGfoL0GS3nMJjcz6O6F5x6VySzE",
-        },
-        {
-            id: "2",
-            name: "Signature Cashmere Knit",
-            colorSize: "Midnight Navy / Size M",
-            price: 295.0,
-            quantity: 1,
-            image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDtguZAV7TBALXLtTufILyZZSf6xZS7-FAWar0pFGdHw81JRdTFDvsVNwGzi57CpHS1cOkvWi4N5Sb1nr_F7PjKkgfe4nu5ZF6M32Zd5pQ5kiMdMICAOy9lkvnmfRFo5A1Jl_zY9CGNLa2Mvbmmkqv3o_rIttcvyZf1yTFnxEbTUZgFRJNHfWho98bcNGsphyVGdmUGCdBuLLmPMwm-IDq7YHN5Uw-16SYW2p4w46XYxFrY6t0EOmGfoL0GS3nMJjcz6O6F5x6VySzE",
-        },
-    ];
+    useEffect(() => {
+        if (!isLoading && cart.items.length === 0) {
+            router.replace("/cart");
+        }
+    }, [isLoading, cart.items.length, router]);
+
+    if (isLoading) {
+        return (
+            <main className="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-20 min-h-[60vh] flex items-center justify-center">
+                <div className="w-10 h-10 border-2 border-brand-teal border-t-transparent rounded-full animate-spin" />
+            </main>
+        );
+    }
 
     return (
-        <main className="max-w-7xl mx-auto px-10 pt-10 pb-20 overflow-hidden min-h-screen">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 pb-20 overflow-hidden min-h-[75vh]">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="flex flex-col lg:flex-row gap-20"
+                className="flex flex-col lg:flex-row gap-12 lg:gap-20"
             >
                 <Elements stripe={stripePromise}>
-                    <PaymentForm onProcessingChange={setIsProcessing} />
+                    <PaymentForm />
                 </Elements>
-                <OrderSummary items={cartItems} isProcessing={isProcessing} />
+                <OrderSummary isProcessing={isSubmittingOrder} />
             </motion.div>
         </main>
     );

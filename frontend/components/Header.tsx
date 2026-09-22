@@ -2,21 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import LogoIcon from './LogoIcon'
+import SearchModal from './SearchModal'
 import useNavigateTo from '@/hooks/useNavigateTo'
-
-interface User {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-}
+import { useAuth } from '@/context/AuthContext'
+import { useFavorites } from '@/context/FavoriteContext'
+import { useCart } from '@/context/CartContext'
 
 export default function Header() {
-    const [cartCount] = useState(0)
+    const { cartCount } = useCart()
     const [menuOpen, setMenuOpen] = useState(false)
     const [profileOpen, setProfileOpen] = useState(false)
-    const [user, setUser] = useState<User | null>(null)
+    const [searchOpen, setSearchOpen] = useState(false)
+    const { user, logout } = useAuth()
+    const { favoritesCount } = useFavorites()
 
     const navigateTo = useNavigateTo()
     const pathname = usePathname()
@@ -32,7 +32,18 @@ export default function Header() {
         { label: 'Contact', path: '/contact' },
     ]
 
+    const isAdmin = user?.role?.toString().toLowerCase() === 'admin' || user?.role?.toString().toLowerCase() === 'role_admin'
+
     const profileMenu = [
+        ...(isAdmin
+            ? [
+                {
+                    label: 'Admin Dashboard',
+                    icon: 'dashboard',
+                    path: '/admin',
+                },
+            ]
+            : []),
         {
             label: 'Profile',
             icon: 'person',
@@ -58,21 +69,6 @@ export default function Header() {
     const isActive = (path: string) => pathname === path
 
     useEffect(() => {
-        async function fetchUser() {
-            try {
-                const res = await fetch('/api/auth/me')
-                if (res.ok) {
-                    const data = await res.json()
-                    setUser(data.user)
-                }
-            } catch (err) {
-                console.error('Failed to fetch user:', err)
-            }
-        }
-        fetchUser()
-    }, [pathname])
-
-    useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (
                 profileRef.current &&
@@ -94,13 +90,7 @@ export default function Header() {
 
     const handleLogout = async () => {
         setProfileOpen(false)
-        try {
-            await fetch('/api/auth/logout', { method: 'POST' })
-            setUser(null)
-            navigateTo('/login', true)
-        } catch (err) {
-            console.error('Failed to logout:', err)
-        }
+        await logout()
     }
 
     if (pathname === '/login' || pathname.startsWith('/admin')) return null
@@ -149,9 +139,30 @@ export default function Header() {
                 <div className="flex items-center gap-3 sm:gap-4 lg:gap-6">
 
                     {/* SEARCH */}
-                    <button className="hidden sm:flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition">
+                    <button
+                        type="button"
+                        onClick={() => setSearchOpen(true)}
+                        className="flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition cursor-pointer text-gray-700 hover:text-primary"
+                        title="Search Products"
+                        aria-label="Search Products"
+                    >
                         <span className="material-symbols-outlined text-[20px]">
                             search
+                        </span>
+                    </button>
+
+                    {/* FAVORITES */}
+                    <button
+                        onClick={() => navigateTo('/favorites', true)}
+                        className="relative flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition text-gray-700 hover:text-primary"
+                        title="My Favorites"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">
+                            favorite
+                        </span>
+
+                        <span className="absolute -top-1 -right-1 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                            {favoritesCount}
                         </span>
                     </button>
 
@@ -179,11 +190,22 @@ export default function Header() {
                                     navigateTo('/login', true)
                                 }
                             }}
-                            className="flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition"
+                            className="relative flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition overflow-hidden"
                         >
-                            <span className="material-symbols-outlined text-[20px]">
-                                person
-                            </span>
+                            {user?.avatar ? (
+                                <Image
+                                    src={user.avatar}
+                                    alt="Avatar"
+                                    fill
+                                    unoptimized={user.avatar.startsWith('data:') || user.avatar.startsWith('blob:') || user.avatar.startsWith('/uploads/')}
+                                    className="object-cover"
+                                    sizes="40px"
+                                />
+                            ) : (
+                                <span className="material-symbols-outlined text-[20px]">
+                                    person
+                                </span>
+                            )}
                         </button>
 
                         {/* DROPDOWN MENU */}
@@ -195,14 +217,28 @@ export default function Header() {
                                     }`}
                             >
                                 {/* USER INFO */}
-                                <div className="px-5 py-4 border-b border-gray-100">
-                                    <h3 className="text-sm font-bold text-black">
-                                        {user.firstName} {user.lastName}
-                                    </h3>
+                                <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                                    {user.avatar && (
+                                        <div className="relative size-10 rounded-full overflow-hidden shrink-0 border border-gray-200">
+                                            <Image
+                                                src={user.avatar}
+                                                alt="Avatar"
+                                                fill
+                                                unoptimized={user.avatar.startsWith('data:') || user.avatar.startsWith('blob:') || user.avatar.startsWith('/uploads/')}
+                                                className="object-cover"
+                                                sizes="40px"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-sm font-bold text-black truncate">
+                                            {user.firstName} {user.lastName}
+                                        </h3>
 
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {user.email}
-                                    </p>
+                                        <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                            {user.email}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {/* MENU ITEMS */}
@@ -276,6 +312,12 @@ export default function Header() {
                     ))}
                 </div>
             )}
+
+            {/* SEARCH MODAL */}
+            <SearchModal
+                isOpen={searchOpen}
+                onClose={() => setSearchOpen(false)}
+            />
         </header>
     )
 }

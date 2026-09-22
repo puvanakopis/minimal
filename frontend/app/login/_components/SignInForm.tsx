@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
+import { authService as authApi } from '@/services'
+import { useAuth } from '@/context/AuthContext'
+import { notify } from '@/helper/toast'
 
 interface SignInFormProps {
     onForgotPassword: () => void
@@ -10,12 +13,12 @@ interface SignInFormProps {
 }
 
 export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormProps) {
+    const { login } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [emailError, setEmailError] = useState('')
     const [passwordError, setPasswordError] = useState('')
-    const [formError, setFormError] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 
     const validateEmail = (val: string) => {
@@ -46,7 +49,6 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setFormError('')
 
         const isEmailValid = validateEmail(email)
         const isPassValid = validatePassword(password)
@@ -56,31 +58,28 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
         setIsLoading(true)
 
         try {
-            const res = await fetch('/api/auth/signin', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            })
+            const res = await authApi.login({ email, password })
 
-            const data = await res.json()
+            if (res.success && res.data) {
+                notify.success(`Welcome back, ${res.data.user?.firstName || 'User'}!`)
+                login(res.data.token, res.data.user)
 
-            if (!res.ok) {
-                setFormError(data.error || 'Something went wrong')
-                setIsLoading(false)
-                return
-            }
+                // Navigate based on user role: admin -> /admin, user -> /
+                const userRole = res.data.user?.role?.toString().toLowerCase()
+                const isAdmin = userRole === 'admin' || userRole === 'role_admin'
 
-            // Navigate to appropriate page on success
-            if (data.user?.role === 'admin') {
-                window.location.href = '/admin'
+                if (isAdmin) {
+                    window.location.href = '/admin'
+                } else {
+                    window.location.href = '/'
+                }
             } else {
-                window.location.href = '/'
+                const msg = res.message || 'Something went wrong'
+                notify.error(msg)
+                setIsLoading(false)
             }
-        } catch (err) {
-            console.error('Sign in error:', err)
-            setFormError('Network error. Please try again.')
+        } catch (err: any) {
+            notify.apiError(err, 'Invalid email or password. Please try again.')
             setIsLoading(false)
         }
     }
@@ -95,11 +94,6 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
             onSubmit={handleSubmit}
             className="space-y-6"
         >
-            {formError && (
-                <div className="p-3 text-xs bg-rose-50 border border-rose-100 text-rose-600 rounded-xl font-semibold text-center">
-                    {formError}
-                </div>
-            )}
             {/* EMAIL INPUT */}
             <div className="relative">
                 <input

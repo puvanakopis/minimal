@@ -1,28 +1,49 @@
 "use client";
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useAuth, useUsers } from "@/context";
+import { notify } from "@/helper/toast";
 
 export function ProfileForm() {
+    const { user, setUser } = useAuth();
+    const { uploadAvatar, updateProfile } = useUsers();
+
     const [formData, setFormData] = useState({
-        firstName: "Julianne",
-        lastName: "Vanderbilt",
-        email: "j.vanderbilt@editorial.com",
-        phone: "+1 (555) 012-3456",
-        address:
-            "742 Evergreen Terrace, Luxury Heights\nNew York, NY 10001\nUnited States",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
     });
 
+    const [profileImage, setProfileImage] = useState<string>("");
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] =
-        useState<"idle" | "success" | "error">("idle");
-
-    const [profileImage, setProfileImage] = useState<string>(
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuAkqKN-Dn7b2RiByQOdsY3JsOSPqwWe9h5hkK-nlCe_c-yNoY5XnCvvlLfbad7i9b5Hnd_0IG_26KxM972ZeCq7XZ6jaoWnDQcGSMK6pDILCqAqd0y6TPCeIaTGtlyjDNk00J9lutPGvfb97ttlZsxF4Su7lU3kWdeJvFzgoMTlOZm4j1Jwu7Zx38TrKUzlpgcm4FfesCRehO4diutfWGA_X-cQmywSMVRptlZ0_oBPL3Nc7wNj7m_OFngqYFlIe_IUX-VjGx_66KtP"
-    );
+    const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
+    const [statusMessage, setStatusMessage] = useState<string>("");
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const firstInitial = (formData.firstName?.trim()?.[0] || user?.firstName?.trim()?.[0] || user?.email?.trim()?.[0] || "U").toUpperCase();
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                firstName: user.firstName || "",
+                lastName: user.lastName || "",
+                email: user.email || "",
+                phone: user.phoneNumber || "",
+                address: user.shippingAddress || "",
+            });
+            if (user.avatar) {
+                setProfileImage(user.avatar);
+            } else {
+                setProfileImage("");
+            }
+        }
+    }, [user]);
 
     const handleInputChange = (
         e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -35,11 +56,18 @@ export function ProfileForm() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setProfileImage(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+        // Check file size (limit to 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setSaveStatus("error");
+            const err = "Image size should be less than 5MB";
+            setStatusMessage(err);
+            notify.warning(err);
+            setTimeout(() => setSaveStatus("idle"), 3000);
+            return;
+        }
+
+        setAvatarFile(file);
+        setProfileImage(URL.createObjectURL(file));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -47,13 +75,53 @@ export function ProfileForm() {
 
         setIsSaving(true);
         setSaveStatus("idle");
+        setStatusMessage("");
 
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        try {
+            let finalAvatar = profileImage;
 
-        setIsSaving(false);
-        setSaveStatus("success");
+            if (avatarFile) {
+                const uploadRes = await uploadAvatar(avatarFile);
+                if (!uploadRes.success || !uploadRes.data?.avatarUrl) {
+                    throw new Error(uploadRes.message || "Failed to upload avatar image");
+                }
+                finalAvatar = uploadRes.data.avatarUrl;
+            }
 
-        setTimeout(() => setSaveStatus("idle"), 2000);
+            const res = await updateProfile({
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
+                phoneNumber: formData.phone.trim(),
+                shippingAddress: formData.address.trim(),
+                avatar: finalAvatar,
+            });
+
+            if (res.success && res.data) {
+                setUser(res.data);
+                setAvatarFile(null);
+                setSaveStatus("success");
+                const msg = "Profile updated successfully!";
+                setStatusMessage(msg);
+                notify.success(msg);
+            } else {
+                setSaveStatus("error");
+                const msg = res.message || "Failed to update profile.";
+                setStatusMessage(msg);
+                notify.error(msg);
+            }
+        } catch (err: unknown) {
+            setSaveStatus("error");
+            const errorMessage =
+                err instanceof Error ? err.message : "An error occurred while updating profile.";
+            setStatusMessage(errorMessage);
+            notify.apiError(err, "An error occurred while updating profile.");
+        } finally {
+            setIsSaving(false);
+            setTimeout(() => {
+                setSaveStatus("idle");
+                setStatusMessage("");
+            }, 3000);
+        }
     };
 
     return (
@@ -91,14 +159,21 @@ export function ProfileForm() {
                     className="flex flex-col items-center gap-8 group"
                 >
                     <div className="relative w-48 h-48 overflow-hidden bg-zinc-100 rounded-full border border-brand-teal/20 p-1 shadow-2xl">
-                        <div className="relative w-full h-full rounded-full overflow-hidden">
-                            <Image
-                                src={profileImage}
-                                alt="Profile photo"
-                                fill
-                                className="object-cover grayscale hover:grayscale-0 transition-all duration-1000 ease-in-out scale-105 hover:scale-100"
-                                sizes="(max-width: 192px) 100vw, 192px"
-                            />
+                        <div className="relative w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-zinc-50">
+                            {profileImage ? (
+                                <Image
+                                    src={profileImage}
+                                    alt="Profile photo"
+                                    fill
+                                    unoptimized={profileImage.startsWith("data:") || profileImage.startsWith("blob:") || profileImage.startsWith("/uploads/")}
+                                    className="object-cover grayscale hover:grayscale-0 transition-all duration-1000 ease-in-out scale-105 hover:scale-100"
+                                    sizes="(max-width: 192px) 100vw, 192px"
+                                />
+                            ) : (
+                                <div className="w-full h-full rounded-full bg-brand-teal/10 text-brand-teal flex items-center justify-center font-serif text-6xl font-bold select-none">
+                                    {firstInitial}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -113,9 +188,9 @@ export function ProfileForm() {
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="text-[10px] font-bold text-zinc-400 hover:text-brand-teal transition-all tracking-[0.2em] border-b border-zinc-200 hover:border-brand-teal pb-1"
+                        className="text-[10px] font-bold text-zinc-400 hover:text-brand-teal transition-all tracking-[0.2em] border-b border-zinc-200 hover:border-brand-teal pb-1 cursor-pointer"
                     >
-                        UPDATE AVATAR
+                        {profileImage ? "UPDATE AVATAR" : "UPLOAD AVATAR"}
                     </button>
                 </motion.div>
 
@@ -136,6 +211,8 @@ export function ProfileForm() {
                                 name="firstName"
                                 value={formData.firstName}
                                 onChange={handleInputChange}
+                                required
+                                placeholder="Enter first name"
                                 className="bg-transparent border-0 border-b border-zinc-200 py-3 font-serif text-xl focus:border-brand-teal outline-none transition-colors duration-300"
                             />
                         </motion.div>
@@ -154,26 +231,33 @@ export function ProfileForm() {
                                 name="lastName"
                                 value={formData.lastName}
                                 onChange={handleInputChange}
+                                required
+                                placeholder="Enter last name"
                                 className="bg-transparent border-0 border-b border-zinc-200 py-3 font-serif text-xl focus:border-brand-teal outline-none transition-colors duration-300"
                             />
                         </motion.div>
 
-                        {/* Email */}
+                        {/* Email (Read Only) */}
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.8 }}
                             className="flex flex-col gap-3 md:col-span-2"
                         >
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                                Email Address
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                                    Email Address
+                                </label>
+                                <span className="text-[10px] text-zinc-400 tracking-wider">
+                                    (Verified account email)
+                                </span>
+                            </div>
                             <input
                                 name="email"
                                 type="email"
                                 value={formData.email}
-                                onChange={handleInputChange}
-                                className="bg-transparent border-0 border-b border-zinc-200 py-3 font-serif text-xl focus:border-brand-teal outline-none transition-colors duration-300"
+                                disabled
+                                className="bg-transparent border-0 border-b border-zinc-200 py-3 font-serif text-xl text-zinc-500 cursor-not-allowed outline-none"
                             />
                         </motion.div>
 
@@ -192,6 +276,7 @@ export function ProfileForm() {
                                 type="tel"
                                 value={formData.phone}
                                 onChange={handleInputChange}
+                                placeholder="+1 (555) 000-0000"
                                 className="bg-transparent border-0 border-b border-zinc-200 py-3 font-serif text-xl focus:border-brand-teal outline-none transition-colors duration-300"
                             />
                         </motion.div>
@@ -211,6 +296,7 @@ export function ProfileForm() {
                                 rows={3}
                                 value={formData.address}
                                 onChange={handleInputChange}
+                                placeholder="Street address, City, State/Province, Postal Code, Country"
                                 className="bg-transparent border-0 border-b border-zinc-200 py-3 font-serif text-xl focus:border-brand-teal outline-none resize-none transition-colors duration-300"
                             />
                         </motion.div>
@@ -226,17 +312,22 @@ export function ProfileForm() {
                         <button
                             type="submit"
                             disabled={isSaving}
-                            className={`group relative overflow-hidden px-12 py-5 font-bold uppercase tracking-[0.3em] text-[11px] transition-all duration-500 ${saveStatus === "success"
-                                ? "bg-zinc-900 text-white"
-                                : "bg-brand-teal text-white hover:bg-zinc-900"
-                                } disabled:opacity-70`}
+                            className={`group relative overflow-hidden px-12 py-5 font-bold uppercase tracking-[0.3em] text-[11px] transition-all duration-500 ${
+                                saveStatus === "success"
+                                    ? "bg-zinc-900 text-white"
+                                    : saveStatus === "error"
+                                    ? "bg-red-600 text-white"
+                                    : "bg-brand-teal text-white hover:bg-zinc-900"
+                            } disabled:opacity-70`}
                         >
                             <span className="relative z-10">
                                 {isSaving
                                     ? "SAVING..."
                                     : saveStatus === "success"
-                                        ? "SUCCESS"
-                                        : "Commit Changes"}
+                                    ? "SAVED"
+                                    : saveStatus === "error"
+                                    ? "RETRY"
+                                    : "Commit Changes"}
                             </span>
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                         </button>

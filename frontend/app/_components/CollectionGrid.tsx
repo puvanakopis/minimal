@@ -52,6 +52,7 @@ export default function CollectionGrid() {
                 alt={`${collection.title}'s Collection`}
                 src={collection.image}
                 fill
+                sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover transition-transform duration-1000 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-500"></div>
