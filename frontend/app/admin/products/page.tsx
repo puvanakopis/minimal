@@ -793,37 +793,26 @@ export default function AdminProducts() {
             </div>
 
             {/* MODAL ACTIONS FOOTER */}
-            <div className="flex items-center justify-between pt-4 mt-6 border-t border-gray-100">
-              <Link
-                href={`/products/${viewingProduct.id}`}
-                target="_blank"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-teal hover:underline"
+            <div className="flex items-center justify-end gap-2 pt-4 mt-6 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setViewingProduct(null)}
+                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
               >
-                <span>View on Storefront</span>
-                <ExternalLink size={13} />
-              </Link>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setViewingProduct(null)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const prod = viewingProduct;
-                    setViewingProduct(null);
-                    handleOpenEditModal(prod);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-brand-teal hover:bg-brand-teal/90 rounded-xl transition-all shadow-xs cursor-pointer"
-                >
-                  <Edit size={13} />
-                  <span>Edit Product</span>
-                </button>
-              </div>
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const prod = viewingProduct;
+                  setViewingProduct(null);
+                  handleOpenEditModal(prod);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-brand-teal hover:bg-brand-teal/90 rounded-xl transition-all shadow-xs cursor-pointer"
+              >
+                <Edit size={13} />
+                <span>Edit Product</span>
+              </button>
             </div>
           </div>
         </div>

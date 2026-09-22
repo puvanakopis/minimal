@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, ShoppingBag, ShoppingCart, Users, LogOut, Loader2, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, ShoppingCart, Users, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="space-y-10">
           {/* BRAND */}
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/admin" className="flex items-center gap-2">
               <span className="font-serif text-xl font-bold uppercase tracking-widest text-[#1a1a1a]">MINIMAL</span>
               <span className="text-[9px] uppercase tracking-widest bg-brand-teal/10 text-brand-teal px-2 py-0.5 rounded font-black">ADMIN</span>
             </Link>
@@ -81,14 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* BOTTOM ACTIONS */}
-        <div className="space-y-2">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-brand-teal hover:bg-brand-teal/5 transition-all duration-300"
-          >
-            <ArrowLeft size={16} />
-            Back to Shop
-          </Link>
+        <div>
           <button
             onClick={() => logout()}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-50 transition-all duration-300 cursor-pointer"
