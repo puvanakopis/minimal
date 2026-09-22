@@ -21,12 +21,21 @@ public class UserDto {
     private boolean emailVerified;
     private String role;
     private boolean blocked;
+    private boolean deleted;
+    private String status;
     private String phoneNumber;
     private String shippingAddress;
     private String avatar;
     private LocalDateTime createdAt;
 
     public static UserDto fromEntity(User user) {
+        String status = "active";
+        if (user.isDeleted()) {
+            status = "deleted";
+        } else if (user.isBlocked()) {
+            status = "blocked";
+        }
+
         return UserDto.builder()
                 .id(user.getId())
                 .firstName(user.getFirstName())
@@ -35,6 +44,8 @@ public class UserDto {
                 .emailVerified(user.isEmailVerified())
                 .role(user.getRole() != null ? user.getRole().name() : Role.user.name())
                 .blocked(user.isBlocked())
+                .deleted(user.isDeleted())
+                .status(status)
                 .phoneNumber(user.getPhoneNumber())
                 .shippingAddress(user.getShippingAddress())
                 .avatar(user.getAvatar())

@@ -6,6 +6,8 @@ export interface User {
   emailVerified: boolean;
   role: 'user' | 'admin' | string;
   blocked?: boolean;
+  deleted?: boolean;
+  status?: 'active' | 'blocked' | 'deleted' | string;
   phoneNumber?: string;
   shippingAddress?: string;
   avatar?: string;
@@ -18,10 +20,15 @@ export interface AdminUpdateUserPayload {
   lastName?: string;
   role?: 'user' | 'admin' | string;
   blocked?: boolean;
+  deleted?: boolean;
   emailVerified?: boolean;
   phoneNumber?: string;
   shippingAddress?: string;
   avatar?: string;
+}
+
+export interface DeleteAccountPayload {
+  password?: string;
 }
 
 export interface UpdateProfilePayload {
@@ -76,3 +83,10 @@ export interface ResendOtpPayload {
   email: string;
   purpose: 'ACCOUNT_VERIFICATION' | 'PASSWORD_RESET';
 }
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword?: string;
+}
+

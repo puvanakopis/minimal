@@ -15,7 +15,6 @@ import {
   Tag,
   Layers,
   CheckCircle2,
-  AlertCircle,
   Package,
   Sparkles,
 } from 'lucide-react';
@@ -76,7 +75,6 @@ export default function AdminProducts() {
   const [customSizeInput, setCustomSizeInput] = useState('');
   const [description, setDescription] = useState('');
 
-  const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -159,7 +157,6 @@ export default function AdminProducts() {
     setSelectedSizes(['XS', 'S', 'M', 'L', 'XL', 'XXL']);
     setCustomSizeInput('');
     setDescription('');
-    setFormError('');
     setShowAddModal(true);
   };
 
@@ -202,7 +199,6 @@ export default function AdminProducts() {
     );
     setCustomSizeInput('');
     setDescription(product.description || '');
-    setFormError('');
   };
 
   const handleToggleSize = (size: string) => {
@@ -245,7 +241,7 @@ export default function AdminProducts() {
 
     const availableSlots = MAX_IMAGES - imagesList.length;
     if (availableSlots <= 0) {
-      setFormError(`Maximum limit of ${MAX_IMAGES} images reached.`);
+      notify.warning(`Maximum limit of ${MAX_IMAGES} images reached.`);
       return;
     }
 
@@ -254,7 +250,7 @@ export default function AdminProducts() {
 
     for (const file of selectedFiles) {
       if (!file.type.startsWith('image/')) {
-        setFormError('Please select valid image files only (PNG, JPG, WEBP, GIF, SVG).');
+        notify.warning('Please select valid image files only (PNG, JPG, WEBP, GIF, SVG).');
         continue;
       }
       newEntries.push({
@@ -265,9 +261,7 @@ export default function AdminProducts() {
     }
 
     if (files.length > availableSlots) {
-      setFormError(`Only ${availableSlots} more image(s) could be added (max ${MAX_IMAGES} images).`);
-    } else {
-      setFormError('');
+      notify.warning(`Only ${availableSlots} more image(s) could be added (max ${MAX_IMAGES} images).`);
     }
 
     setImagesList((prev) => [...prev, ...newEntries].slice(0, MAX_IMAGES));
@@ -279,20 +273,18 @@ export default function AdminProducts() {
 
   const handleRemoveImage = (id: string) => {
     setImagesList((prev) => prev.filter((img) => img.id !== id));
-    setFormError('');
   };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError('');
 
     if (imagesList.length === 0) {
-      setFormError('Please upload at least 1 product image.');
+      notify.warning('Please upload at least 1 product image.');
       return;
     }
 
     if (imagesList.length > MAX_IMAGES) {
-      setFormError(`A maximum of ${MAX_IMAGES} images is allowed per product.`);
+      notify.warning(`A maximum of ${MAX_IMAGES} images is allowed per product.`);
       return;
     }
 
@@ -334,7 +326,6 @@ export default function AdminProducts() {
 
       if (!response.success) {
         const msg = response.message || 'Failed to add product';
-        setFormError(msg);
         notify.error(msg);
       } else {
         notify.success(`Product "${name}" created successfully!`);
@@ -342,8 +333,6 @@ export default function AdminProducts() {
         fetchProducts();
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error creating product. Try again.';
-      setFormError(msg);
       notify.apiError(err, 'Error creating product. Try again.');
     } finally {
       setSubmitting(false);
@@ -353,15 +342,14 @@ export default function AdminProducts() {
   const handleEditProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
-    setFormError('');
 
     if (imagesList.length === 0) {
-      setFormError('Please upload at least 1 product image.');
+      notify.warning('Please upload at least 1 product image.');
       return;
     }
 
     if (imagesList.length > MAX_IMAGES) {
-      setFormError(`A maximum of ${MAX_IMAGES} images is allowed per product.`);
+      notify.warning(`A maximum of ${MAX_IMAGES} images is allowed per product.`);
       return;
     }
 
@@ -399,7 +387,6 @@ export default function AdminProducts() {
 
       if (!response.success) {
         const msg = response.message || 'Failed to update product';
-        setFormError(msg);
         notify.error(msg);
       } else {
         notify.success(`Product "${name}" updated successfully!`);
@@ -407,8 +394,6 @@ export default function AdminProducts() {
         fetchProducts();
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error updating product. Try again.';
-      setFormError(msg);
       notify.apiError(err, 'Error updating product. Try again.');
     } finally {
       setSubmitting(false);
@@ -416,8 +401,6 @@ export default function AdminProducts() {
   };
 
   const handleDeleteProduct = async (id: number, productName: string) => {
-    if (!confirm(`Are you sure you want to permanently delete product "${productName}"? This action cannot be undone.`)) return;
-
     try {
       const response = await adminDeleteProduct(id);
       if (response.success) {
@@ -872,13 +855,6 @@ export default function AdminProducts() {
                 <X size={16} />
               </button>
             </div>
-
-            {formError && (
-              <div className="mt-4 p-3 bg-rose-50 rounded-xl border border-rose-200 flex items-start gap-2 text-xs text-rose-700 font-medium">
-                <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-600" />
-                <span>{formError}</span>
-              </div>
-            )}
 
             <form onSubmit={showAddModal ? handleAddProduct : handleEditProduct} className="space-y-4 pt-4">
               {/* PRODUCT NAME */}

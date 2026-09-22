@@ -47,6 +47,10 @@ public class User {
     @Builder.Default
     private boolean blocked = false;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
     @Column(name = "phone_number", length = 50)
     private String phoneNumber;
 

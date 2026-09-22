@@ -19,7 +19,6 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
     const [showPassword, setShowPassword] = useState(false)
     const [emailError, setEmailError] = useState('')
     const [passwordError, setPasswordError] = useState('')
-    const [formError, setFormError] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 
     const validateEmail = (val: string) => {
@@ -50,7 +49,6 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setFormError('')
 
         const isEmailValid = validateEmail(email)
         const isPassValid = validatePassword(password)
@@ -77,13 +75,10 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
                 }
             } else {
                 const msg = res.message || 'Something went wrong'
-                setFormError(msg)
                 notify.error(msg)
                 setIsLoading(false)
             }
         } catch (err: any) {
-            const msg = err.message || 'Invalid email or password. Please try again.'
-            setFormError(msg)
             notify.apiError(err, 'Invalid email or password. Please try again.')
             setIsLoading(false)
         }
@@ -99,11 +94,6 @@ export default function SignInForm({ onForgotPassword, onSignUp }: SignInFormPro
             onSubmit={handleSubmit}
             className="space-y-6"
         >
-            {formError && (
-                <div className="p-3 text-xs bg-rose-50 border border-rose-100 text-rose-600 rounded-xl font-semibold text-center">
-                    {formError}
-                </div>
-            )}
             {/* EMAIL INPUT */}
             <div className="relative">
                 <input

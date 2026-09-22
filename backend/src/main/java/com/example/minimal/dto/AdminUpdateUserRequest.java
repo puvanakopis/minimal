@@ -15,6 +15,7 @@ public class AdminUpdateUserRequest {
     private String lastName;
     private String role; // "user" or "admin"
     private Boolean blocked;
+    private Boolean deleted;
     private Boolean emailVerified;
     private String phoneNumber;
     private String shippingAddress;

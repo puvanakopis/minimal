@@ -29,7 +29,6 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
     const [otpError, setOtpError] = useState('')
     const [otpStep, setOtpStep] = useState(false)
     const [isResending, setIsResending] = useState(false)
-    const [formError, setFormError] = useState('')
     const [formSuccess, setFormSuccess] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 
@@ -104,7 +103,6 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
-        setFormError('')
         setFormSuccess('')
 
         const isFirstNameValid = validateFirstName(firstName)
@@ -133,12 +131,9 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
                 notify.success(msg)
             } else {
                 const msg = res.message || 'Failed to initiate registration.'
-                setFormError(msg)
                 notify.error(msg)
             }
         } catch (err: any) {
-            const msg = err.message || 'An error occurred during registration.'
-            setFormError(msg)
             notify.apiError(err, 'An error occurred during registration.')
         } finally {
             setIsLoading(false)
@@ -147,7 +142,6 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
 
     const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault()
-        setFormError('')
         setFormSuccess('')
         setOtpError('')
 
@@ -173,12 +167,9 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
                 }, 2000)
             } else {
                 const msg = res.message || 'OTP verification failed.'
-                setFormError(msg)
                 notify.error(msg)
             }
         } catch (err: any) {
-            const msg = err.message || 'Invalid or expired OTP.'
-            setFormError(msg)
             notify.apiError(err, 'Invalid or expired OTP.')
         } finally {
             setIsLoading(false)
@@ -186,7 +177,6 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
     }
 
     const handleResendOtp = async () => {
-        setFormError('')
         setFormSuccess('')
         setIsResending(true)
 
@@ -202,12 +192,9 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
                 notify.info(msg)
             } else {
                 const msg = res.message || 'Failed to resend verification code.'
-                setFormError(msg)
                 notify.error(msg)
             }
         } catch (err: any) {
-            const msg = err.message || 'Could not resend OTP. Please try again shortly.'
-            setFormError(msg)
             notify.apiError(err, 'Could not resend OTP. Please try again shortly.')
         } finally {
             setIsResending(false)
@@ -225,11 +212,6 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
                 onSubmit={handleVerifyOtp}
                 className="space-y-6"
             >
-                {formError && (
-                    <div className="p-3 text-xs bg-rose-50 border border-rose-100 text-rose-600 rounded-xl font-semibold text-center">
-                        {formError}
-                    </div>
-                )}
                 {formSuccess && (
                     <div className="p-3 text-xs bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl font-semibold text-center flex items-center justify-center gap-1.5">
                         <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
@@ -315,11 +297,6 @@ export default function SignUpForm({ onSignIn }: SignUpFormProps) {
             onSubmit={handleRegister}
             className="space-y-4"
         >
-            {formError && (
-                <div className="p-3 text-xs bg-rose-50 border border-rose-100 text-rose-600 rounded-xl font-semibold text-center">
-                    {formError}
-                </div>
-            )}
             {formSuccess && (
                 <div className="p-3 text-xs bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl font-semibold text-center">
                     {formSuccess}

@@ -42,6 +42,9 @@ public class AuthService {
 
         if (existingUserOpt.isPresent()) {
             User existingUser = existingUserOpt.get();
+            if (existingUser.isDeleted()) {
+                throw new AppException("An account with this email was deleted. Please contact support.", HttpStatus.CONFLICT);
+            }
             if (existingUser.isEmailVerified()) {
                 throw new AppException("An account with this email already exists", HttpStatus.CONFLICT);
             } else {
@@ -75,6 +78,10 @@ public class AuthService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
+        if (user.isDeleted()) {
+            throw new AppException("This account has been deleted. Please contact support.", HttpStatus.FORBIDDEN);
+        }
+
         if (user.isEmailVerified()) {
             return UserDto.fromEntity(user);
         }
@@ -93,6 +100,10 @@ public class AuthService {
 
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("Invalid email or password", HttpStatus.UNAUTHORIZED));
+
+        if (user.isDeleted()) {
+            throw new AppException("Your account has been deleted. Please contact support to reactivate your account.", HttpStatus.FORBIDDEN);
+        }
 
         if (user.isBlocked()) {
             throw new AppException("Your account has been blocked. Please contact support.", HttpStatus.FORBIDDEN);
@@ -118,10 +129,10 @@ public class AuthService {
         String email = request.getEmail().toLowerCase().trim();
         Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
 
-        if (userOpt.isPresent() && userOpt.get().isEmailVerified()) {
+        if (userOpt.isPresent() && userOpt.get().isEmailVerified() && !userOpt.get().isDeleted()) {
             otpService.generateAndSendOtp(email, OtpPurpose.PASSWORD_RESET);
         } else {
-            log.info("Password reset requested for non-existent or unverified email: {}", email);
+            log.info("Password reset requested for non-existent, unverified, or deleted email: {}", email);
         }
     }
 
@@ -184,6 +195,9 @@ public class AuthService {
     public UserDto getCurrentUser(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        if (user.isDeleted()) {
+            throw new AppException("Account has been deleted", HttpStatus.FORBIDDEN);
+        }
         return UserDto.fromEntity(user);
     }
 }

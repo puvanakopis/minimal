@@ -2,6 +2,8 @@ package com.example.minimal.controller;
 
 import com.example.minimal.dto.AdminUpdateUserRequest;
 import com.example.minimal.dto.ApiResponse;
+import com.example.minimal.dto.ChangePasswordRequest;
+import com.example.minimal.dto.DeleteAccountRequest;
 import com.example.minimal.dto.UpdateProfileRequest;
 import com.example.minimal.dto.UserDto;
 import com.example.minimal.service.FileStorageService;
@@ -44,8 +46,7 @@ public class UserController {
     @PutMapping("/api/user/profile")
     public ResponseEntity<ApiResponse<UserDto>> updateProfile(
             Authentication authentication,
-            @Valid @RequestBody UpdateProfileRequest request
-    ) {
+            @Valid @RequestBody UpdateProfileRequest request) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Unauthenticated"));
@@ -60,8 +61,7 @@ public class UserController {
             Authentication authentication,
             @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam(value = "image", required = false) MultipartFile image,
-            @RequestParam(value = "avatar", required = false) MultipartFile avatar
-    ) {
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Unauthenticated"));
@@ -78,6 +78,45 @@ public class UserController {
         response.put("avatarUrl", avatarUrl);
         response.put("imageUrl", avatarUrl);
         return ResponseEntity.ok(ApiResponse.success("Avatar uploaded successfully", response));
+    }
+
+    @PutMapping({"/api/user/change-password", "/api/user/password"})
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Unauthenticated"));
+        }
+        String email = authentication.getName();
+        userService.changePassword(email, request);
+        return ResponseEntity.ok(ApiResponse.success("Password updated successfully"));
+    }
+
+    @PostMapping({"/api/user/delete-account", "/api/user/account/delete"})
+    public ResponseEntity<ApiResponse<Void>> deleteAccountPost(
+            Authentication authentication,
+            @RequestBody(required = false) DeleteAccountRequest request) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Unauthenticated"));
+        }
+        String email = authentication.getName();
+        userService.deleteAccount(email, request);
+        return ResponseEntity.ok(ApiResponse.success("Account deleted successfully"));
+    }
+
+    @DeleteMapping({"/api/user/account", "/api/user/profile", "/api/user/me"})
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            Authentication authentication,
+            @RequestBody(required = false) DeleteAccountRequest request) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Unauthenticated"));
+        }
+        String email = authentication.getName();
+        userService.deleteAccount(email, request);
+        return ResponseEntity.ok(ApiResponse.success("Account deleted successfully"));
     }
 
     // ==========================================
@@ -103,8 +142,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserDto>> updateUser(
             @PathVariable("id") Long id,
             @RequestBody AdminUpdateUserRequest request,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         String currentAdminEmail = authentication != null ? authentication.getName() : null;
         UserDto updated = userService.updateUserAdmin(id, request, currentAdminEmail);
         return ResponseEntity.ok(ApiResponse.success("User updated successfully", updated));
@@ -114,8 +152,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
     public ResponseEntity<ApiResponse<UserDto>> updateUserWithoutPathId(
             @RequestBody AdminUpdateUserRequest request,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         if (request.getId() == null) {
             return ResponseEntity.badRequest().body(ApiResponse.error("User ID is required"));
         }
@@ -130,8 +167,7 @@ public class UserController {
             @PathVariable("id") Long id,
             @RequestBody(required = false) Map<String, Boolean> body,
             @RequestParam(value = "blocked", required = false) Boolean blockedParam,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         Boolean blocked = blockedParam;
         if (blocked == null && body != null && body.containsKey("blocked")) {
             blocked = body.get("blocked");
@@ -149,8 +185,7 @@ public class UserController {
             @PathVariable("id") Long id,
             @RequestBody(required = false) Map<String, Boolean> body,
             @RequestParam(value = "blocked", required = false) Boolean blockedParam,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         return toggleBlockUser(id, body, blockedParam, authentication);
     }
 
@@ -158,8 +193,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
     public ResponseEntity<ApiResponse<Void>> deleteUserById(
             @PathVariable("id") Long id,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         String currentAdminEmail = authentication != null ? authentication.getName() : null;
         userService.deleteUserAdmin(id, currentAdminEmail);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
@@ -169,8 +203,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('admin')")
     public ResponseEntity<ApiResponse<Void>> deleteUserByParam(
             @RequestParam("id") Long id,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         String currentAdminEmail = authentication != null ? authentication.getName() : null;
         userService.deleteUserAdmin(id, currentAdminEmail);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));

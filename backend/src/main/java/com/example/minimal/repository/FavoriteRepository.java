@@ -30,6 +30,10 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     void deleteByUserEmailIgnoreCaseAndProductId(String email, Long productId);
 
+    void deleteByUserId(Long userId);
+
+    void deleteByUserEmailIgnoreCase(String email);
+
     @Query("SELECT f.product.id FROM Favorite f WHERE LOWER(f.user.email) = LOWER(:email) ORDER BY f.createdAt DESC")
     List<Long> findProductIdsByUserEmailIgnoreCase(@Param("email") String email);
 }

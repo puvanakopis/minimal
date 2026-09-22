@@ -26,7 +26,6 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
 
   const [isResending, setIsResending] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
-  const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -76,7 +75,6 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
   // Step 1: Send Forgot Password OTP
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setFormError('')
     setFormSuccess('')
 
     const isEmailValid = validateResetEmail(resetEmail)
@@ -92,12 +90,9 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
         notify.success(msg)
       } else {
         const msg = res.message || 'Failed to send reset code.'
-        setFormError(msg)
         notify.error(msg)
       }
     } catch (err: any) {
-      const msg = err.message || 'Error requesting password reset.'
-      setFormError(msg)
       notify.apiError(err, 'Error requesting password reset.')
     } finally {
       setIsLoading(false)
@@ -107,7 +102,6 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
   // Step 2: Verify OTP
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setFormError('')
     setFormSuccess('')
     setOtpError('')
 
@@ -131,12 +125,9 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
         notify.success(msg)
       } else {
         const msg = res.message || 'Invalid or expired reset code.'
-        setFormError(msg)
         notify.error(msg)
       }
     } catch (err: any) {
-      const msg = err.message || 'Invalid or expired OTP.'
-      setFormError(msg)
       notify.apiError(err, 'Invalid or expired OTP.')
     } finally {
       setIsLoading(false)
@@ -146,7 +137,6 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
   // Step 3: Reset Password with Reset Token
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setFormError('')
     setFormSuccess('')
 
     const isPassValid = validatePassword(newPassword)
@@ -174,12 +164,9 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
         }, 2500)
       } else {
         const msg = res.message || 'Failed to reset password.'
-        setFormError(msg)
         notify.error(msg)
       }
     } catch (err: any) {
-      const msg = err.message || 'Failed to reset password. Please try again.'
-      setFormError(msg)
       notify.apiError(err, 'Failed to reset password. Please try again.')
     } finally {
       setIsLoading(false)
@@ -188,7 +175,6 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
 
   // Resend OTP
   const handleResendOtp = async () => {
-    setFormError('')
     setFormSuccess('')
     setIsResending(true)
 
@@ -204,12 +190,9 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
         notify.info(msg)
       } else {
         const msg = res.message || 'Failed to resend reset code.'
-        setFormError(msg)
         notify.error(msg)
       }
     } catch (err: any) {
-      const msg = err.message || 'Could not resend OTP. Cooldown may be active.'
-      setFormError(msg)
       notify.apiError(err, 'Could not resend OTP. Cooldown may be active.')
     } finally {
       setIsResending(false)
@@ -218,11 +201,6 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
 
   return (
     <div className="space-y-6">
-      {formError && (
-        <div className="p-3 text-xs bg-rose-50 border border-rose-100 text-rose-600 rounded-xl font-semibold text-center">
-          {formError}
-        </div>
-      )}
       {formSuccess && (
         <div className="p-3 text-xs bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl font-semibold text-center flex items-center justify-center gap-1.5">
           <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />

@@ -170,9 +170,6 @@ export default function AdminOrders() {
 
   const handleDeleteOrder = async (order: Order) => {
     const orderRef = order.orderNumber || `#${order.id}`;
-    if (!confirm(`Are you sure you want to permanently delete order ${orderRef}? This action cannot be undone.`)) {
-      return;
-    }
 
     try {
       const res = await orderService.adminDeleteOrder(order.id);

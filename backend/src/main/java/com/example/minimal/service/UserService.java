@@ -1,15 +1,26 @@
 package com.example.minimal.service;
 
+import com.example.minimal.dto.AdminUpdateUserRequest;
+import com.example.minimal.dto.ChangePasswordRequest;
+import com.example.minimal.dto.DeleteAccountRequest;
 import com.example.minimal.dto.UpdateProfileRequest;
 import com.example.minimal.dto.UserDto;
 import com.example.minimal.exception.AppException;
+import com.example.minimal.model.Order;
 import com.example.minimal.model.User;
+import com.example.minimal.repository.CartItemRepository;
+import com.example.minimal.repository.FavoriteRepository;
+import com.example.minimal.repository.OrderRepository;
 import com.example.minimal.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,11 +28,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final CartItemRepository cartItemRepository;
+    private final FavoriteRepository favoriteRepository;
+    private final OrderRepository orderRepository;
 
     @Transactional(readOnly = true)
     public UserDto getProfile(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        if (user.isDeleted()) {
+            throw new AppException("Account has been deleted", HttpStatus.FORBIDDEN);
+        }
         return UserDto.fromEntity(user);
     }
 
@@ -56,15 +74,57 @@ public class UserService {
         return UserDto.fromEntity(savedUser);
     }
 
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequest request) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new AppException("Current password is incorrect", HttpStatus.BAD_REQUEST);
+        }
+
+        if (request.getConfirmPassword() != null && !request.getConfirmPassword().isBlank()) {
+            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+                throw new AppException("New passwords do not match", HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new AppException("New password cannot be the same as your current password", HttpStatus.BAD_REQUEST);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        log.info("Password changed successfully for user ID: {}", user.getId());
+    }
+
+    @Transactional
+    public void deleteAccount(String email, DeleteAccountRequest request) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        if (request == null || request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new AppException("Please enter your current password to confirm account deletion.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AppException("Incorrect password. Please enter your current password.", HttpStatus.BAD_REQUEST);
+        }
+
+        user.setDeleted(true);
+        userRepository.save(user);
+        log.info("User soft-deleted their own account: {}", email);
+    }
+
     // ==========================================
     // ADMIN USER MANAGEMENT METHODS
     // ==========================================
 
     @Transactional(readOnly = true)
-    public java.util.List<UserDto> getAllUsersAdmin() {
+    public List<UserDto> getAllUsersAdmin() {
         return userRepository.findAll().stream()
                 .map(UserDto::fromEntity)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -75,7 +135,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserDto updateUserAdmin(Long id, com.example.minimal.dto.AdminUpdateUserRequest request, String currentAdminEmail) {
+    public UserDto updateUserAdmin(Long id, AdminUpdateUserRequest request,
+            String currentAdminEmail) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found with id: " + id, HttpStatus.NOT_FOUND));
 
@@ -123,6 +184,13 @@ public class UserService {
             user.setBlocked(request.getBlocked());
         }
 
+        if (request.getDeleted() != null) {
+            if (isSelf && request.getDeleted()) {
+                throw new AppException("You cannot delete your own account", HttpStatus.BAD_REQUEST);
+            }
+            user.setDeleted(request.getDeleted());
+        }
+
         User savedUser = userRepository.save(user);
         log.info("Admin updated user ID: {}", savedUser.getId());
         return UserDto.fromEntity(savedUser);
@@ -156,7 +224,8 @@ public class UserService {
             throw new AppException("You cannot delete your own account", HttpStatus.BAD_REQUEST);
         }
 
-        userRepository.delete(user);
-        log.info("Admin deleted user ID: {}", id);
+        user.setDeleted(true);
+        userRepository.save(user);
+        log.info("Admin soft-deleted user ID: {}", id);
     }
 }

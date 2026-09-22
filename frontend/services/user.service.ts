@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { ApiResponse, User, UpdateProfilePayload, AdminUpdateUserPayload } from '@/interfaces';
+import { ApiResponse, User, UpdateProfilePayload, AdminUpdateUserPayload, ChangePasswordPayload } from '@/interfaces';
 
 export const userService = {
   // USER PORTAL
@@ -9,6 +9,14 @@ export const userService = {
 
   updateProfile: (data: UpdateProfilePayload): Promise<ApiResponse<User>> => {
     return apiClient.put<User>('/api/user/profile', data);
+  },
+
+  changePassword: (data: ChangePasswordPayload): Promise<ApiResponse<void>> => {
+    return apiClient.put<void>('/api/user/change-password', data);
+  },
+
+  deleteAccount: (password: string): Promise<ApiResponse<void>> => {
+    return apiClient.post<void>('/api/user/delete-account', { password });
   },
 
   uploadAvatar: (file: File): Promise<ApiResponse<{ avatarUrl: string }>> => {

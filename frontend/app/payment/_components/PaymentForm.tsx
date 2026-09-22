@@ -14,7 +14,6 @@ export function PaymentForm() {
     const [cardNumber, setCardNumber] = useState("");
     const [expiry, setExpiry] = useState("");
     const [cvc, setCvc] = useState("");
-    const [error, setError] = useState<string | null>(null);
 
     const handleFormatCardNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
         let val = e.target.value.replace(/\D/g, '').substring(0, 16);
@@ -32,31 +31,22 @@ export function PaymentForm() {
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        setError(null);
 
         if (paymentMethod === 'CARD') {
             if (!cardNumber || cardNumber.replace(/\s/g, '').length < 15) {
-                const msg = "Please enter a valid card number";
-                setError(msg);
-                notify.warning(msg);
+                notify.warning("Please enter a valid card number");
                 return;
             }
             if (!cardHolder.trim()) {
-                const msg = "Please enter cardholder name";
-                setError(msg);
-                notify.warning(msg);
+                notify.warning("Please enter cardholder name");
                 return;
             }
             if (!expiry || expiry.length < 4) {
-                const msg = "Please enter expiry date MM/YY";
-                setError(msg);
-                notify.warning(msg);
+                notify.warning("Please enter expiry date MM/YY");
                 return;
             }
             if (!cvc || cvc.length < 3) {
-                const msg = "Please enter 3 or 4 digit CVC";
-                setError(msg);
-                notify.warning(msg);
+                notify.warning("Please enter 3 or 4 digit CVC");
                 return;
             }
         }
@@ -215,12 +205,6 @@ export function PaymentForm() {
                                     className="bg-transparent border-0 border-b border-[#e7f1f3] py-2.5 font-serif text-lg focus:border-brand-teal outline-none transition-colors duration-300 text-zinc-900"
                                 />
                             </div>
-
-                            {error && (
-                                <div className="text-rose-500 text-xs font-medium mt-2 bg-rose-50 p-3 rounded-lg border border-rose-200">
-                                    {error}
-                                </div>
-                            )}
                         </div>
                     )}
 

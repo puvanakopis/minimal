@@ -37,7 +37,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState('');
-  const [reviewErrorMsg, setReviewErrorMsg] = useState('');
 
   useEffect(() => {
     if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
@@ -85,13 +84,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
   const handleAddReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setReviewErrorMsg('');
     setReviewSuccessMsg('');
 
     if (!reviewComment.trim()) {
-      const err = 'Please write your review message.';
-      setReviewErrorMsg(err);
-      notify.warning(err);
+      notify.warning('Please write your review message.');
       return;
     }
 
@@ -119,12 +115,9 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         setShowReviewForm(false);
       } else {
         const msg = response.message || 'Failed to submit review';
-        setReviewErrorMsg(msg);
         notify.error(msg);
       }
     } catch (err: any) {
-      const msg = err.message || 'Error submitting review';
-      setReviewErrorMsg(msg);
       notify.apiError(err, 'Error submitting review');
     } finally {
       setSubmittingReview(false);
@@ -432,12 +425,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                       )}
                     </div>
                   </div>
-
-                  {reviewErrorMsg && (
-                    <div className="p-3 text-xs bg-rose-50 border border-rose-200 text-rose-600 rounded-xl font-medium">
-                      {reviewErrorMsg}
-                    </div>
-                  )}
 
                   {/* Interactive Star Rating Selector */}
                   <div className="space-y-1.5">

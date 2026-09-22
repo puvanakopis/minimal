@@ -36,7 +36,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'blocked'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'blocked' | 'deleted'>('all');
 
   // Edit modal state
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -72,9 +72,6 @@ export default function AdminUsers() {
 
     const willBlock = !userItem.blocked;
     const actionLabel = willBlock ? 'BLOCK' : 'UNBLOCK';
-    if (!confirm(`Are you sure you want to ${actionLabel} ${userItem.email}? ${willBlock ? 'They will no longer be able to log in.' : 'They will be allowed to log in again.'}`)) {
-      return;
-    }
 
     try {
       const res = await adminToggleBlockUser(userItem.id, willBlock);
@@ -96,13 +93,13 @@ export default function AdminUsers() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to permanently delete user ${email}? This cannot be undone.`)) return;
-
     try {
       const res = await adminDeleteUser(id);
       if (res.success) {
-        notify.success(`User ${email} successfully deleted.`);
-        setUsers((prev) => prev.filter((u) => u.id !== id));
+        notify.success(`User ${email} status set to deleted.`);
+        setUsers((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, deleted: true } : u))
+        );
       }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to delete user';
@@ -120,6 +117,7 @@ export default function AdminUsers() {
       firstName: userItem.firstName || '',
       lastName: userItem.lastName || '',
       blocked: !!userItem.blocked,
+      deleted: !!userItem.deleted,
       emailVerified: !!userItem.emailVerified,
       phoneNumber: userItem.phoneNumber || '',
       shippingAddress: userItem.shippingAddress || '',
@@ -163,11 +161,13 @@ export default function AdminUsers() {
 
       const matchesRole = roleFilter === 'all' || u.role?.toLowerCase() === roleFilter;
 
+      const isDeleted = !!u.deleted;
       const isBlocked = !!u.blocked;
       const matchesStatus =
         statusFilter === 'all' ||
-        (statusFilter === 'blocked' && isBlocked) ||
-        (statusFilter === 'active' && !isBlocked);
+        (statusFilter === 'deleted' && isDeleted) ||
+        (statusFilter === 'blocked' && isBlocked && !isDeleted) ||
+        (statusFilter === 'active' && !isBlocked && !isDeleted);
 
       return matchesSearch && matchesRole && matchesStatus;
     });
@@ -181,7 +181,7 @@ export default function AdminUsers() {
     let verifiedCount = 0;
 
     users.forEach((u) => {
-      if (!u.blocked) activeCount++;
+      if (!u.blocked && !u.deleted) activeCount++;
       if (u.role?.toLowerCase() === 'admin') adminCount++;
       if (u.emailVerified) verifiedCount++;
     });
@@ -277,13 +277,14 @@ export default function AdminUsers() {
           </select>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'blocked')}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'blocked' | 'deleted')}
             aria-label="Filter users by status"
             className="text-xs bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-700 focus:outline-none focus:border-brand-teal"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
             <option value="blocked">Blocked</option>
+            <option value="deleted">Deleted</option>
           </select>
         </div>
       </div>
@@ -313,12 +314,13 @@ export default function AdminUsers() {
               ) : (
                 filteredUsers.map((userItem) => {
                   const isSelf = userItem.email === currentUser?.email;
+                  const isDeleted = !!userItem.deleted;
                   const isBlocked = !!userItem.blocked;
 
                   return (
                     <tr
                       key={userItem.id}
-                      className={`border-b border-gray-100 hover:bg-[#fcfefe] transition-all duration-150 ${isBlocked ? 'bg-rose-50/20' : ''
+                      className={`border-b border-gray-100 hover:bg-[#fcfefe] transition-all duration-150 ${isDeleted ? 'bg-zinc-50/70' : isBlocked ? 'bg-rose-50/20' : ''
                         }`}
                     >
                       {/* USER NAME */}
@@ -389,9 +391,13 @@ export default function AdminUsers() {
                         </span>
                       </td>
 
-                      {/* STATUS (ACTIVE / BLOCKED) */}
+                      {/* STATUS (ACTIVE / BLOCKED / DELETED) */}
                       <td className="p-4">
-                        {isBlocked ? (
+                        {isDeleted ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200">
+                            <Trash2 size={11} className="text-zinc-500" /> Deleted (No Login)
+                          </span>
+                        ) : isBlocked ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
                             <Ban size={11} /> Blocked (No Login)
                           </span>
@@ -440,8 +446,8 @@ export default function AdminUsers() {
                           <button
                             type="button"
                             onClick={() => handleToggleBlock(userItem)}
-                            disabled={isSelf}
-                            className={`size-8 rounded-lg flex items-center justify-center border transition-colors ${isSelf
+                            disabled={isSelf || isDeleted}
+                            className={`size-8 rounded-lg flex items-center justify-center border transition-colors ${isSelf || isDeleted
                                 ? 'opacity-30 cursor-not-allowed border-gray-200 text-gray-400'
                                 : isBlocked
                                   ? 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
@@ -450,9 +456,11 @@ export default function AdminUsers() {
                             title={
                               isSelf
                                 ? 'Cannot block yourself'
-                                : isBlocked
-                                  ? 'Unblock user (allow login)'
-                                  : 'Block user (prevent login)'
+                                : isDeleted
+                                  ? 'Account is deleted'
+                                  : isBlocked
+                                    ? 'Unblock user (allow login)'
+                                    : 'Block user (prevent login)'
                             }
                           >
                             {isBlocked ? <CheckCircle2 size={14} /> : <Ban size={14} />}
@@ -462,10 +470,10 @@ export default function AdminUsers() {
                           <button
                             type="button"
                             onClick={() => handleDeleteUser(userItem.id, userItem.email)}
-                            disabled={isSelf}
-                            className={`size-8 rounded-lg flex items-center justify-center border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-500 hover:bg-rose-50 transition-colors ${isSelf ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'
+                            disabled={isSelf || isDeleted}
+                            className={`size-8 rounded-lg flex items-center justify-center border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-500 hover:bg-rose-50 transition-colors ${isSelf || isDeleted ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'
                               }`}
-                            title={isSelf ? 'Cannot delete yourself' : 'Delete User'}
+                            title={isSelf ? 'Cannot delete yourself' : isDeleted ? 'Account is already deleted' : 'Set Account as Deleted'}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -539,9 +547,9 @@ export default function AdminUsers() {
                   )}
                   <span
                     className={`absolute bottom-0 right-0 size-4 rounded-full border-2 border-white ${
-                      viewingUser.blocked ? 'bg-rose-500' : 'bg-emerald-500'
+                      viewingUser.deleted ? 'bg-zinc-400' : viewingUser.blocked ? 'bg-rose-500' : 'bg-emerald-500'
                     }`}
-                    title={viewingUser.blocked ? 'Blocked' : 'Active'}
+                    title={viewingUser.deleted ? 'Deleted' : viewingUser.blocked ? 'Blocked' : 'Active'}
                   />
                 </div>
 
@@ -562,7 +570,11 @@ export default function AdminUsers() {
                     {viewingUser.role || 'user'}
                   </span>
 
-                  {viewingUser.blocked ? (
+                  {viewingUser.deleted ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200">
+                      <Trash2 size={10} className="text-zinc-500" /> Deleted
+                    </span>
+                  ) : viewingUser.blocked ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
                       <Ban size={10} /> Blocked
                     </span>
@@ -663,10 +675,10 @@ export default function AdminUsers() {
                       </span>
                       <span
                         className={`font-bold ${
-                          viewingUser.blocked ? 'text-rose-600' : 'text-emerald-600'
+                          viewingUser.deleted ? 'text-zinc-500' : viewingUser.blocked ? 'text-rose-600' : 'text-emerald-600'
                         }`}
                       >
-                        {viewingUser.blocked ? 'Blocked' : 'Active & Allowed'}
+                        {viewingUser.deleted ? 'Deleted (No Login)' : viewingUser.blocked ? 'Blocked' : 'Active & Allowed'}
                       </span>
                     </div>
                   </div>
@@ -806,16 +818,24 @@ export default function AdminUsers() {
 
               <div className="pt-2">
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                  Block Login Status
+                  Account Status
                 </label>
                 <select
-                  value={editFormData.blocked ? 'blocked' : 'active'}
+                  value={editFormData.deleted ? 'deleted' : editFormData.blocked ? 'blocked' : 'active'}
                   disabled={editingUser.email === currentUser?.email}
-                  onChange={(e) => setEditFormData({ ...editFormData, blocked: e.target.value === 'blocked' })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditFormData({
+                      ...editFormData,
+                      deleted: val === 'deleted',
+                      blocked: val === 'blocked',
+                    });
+                  }}
                   className="w-full text-xs px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-teal disabled:bg-gray-50 disabled:text-gray-400"
                 >
                   <option value="active">Active (Allowed)</option>
                   <option value="blocked">Blocked (No Login)</option>
+                  <option value="deleted">Deleted (No Login)</option>
                 </select>
               </div>
 
