@@ -84,6 +84,7 @@ export default function Story() {
                                 alt="Atelier detail"
                                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtguZAV7TBALXLtTufILyZZSf6xZS7-FAWar0pFGdHw81JRdTFDvsVNwGzi57CpHS1cOkvWi4N5Sb1nr_F7PjKkgfe4nu5ZF6M32Zd5pQ5kiMdMICAOy9lkvnmfRFo5A1Jl_zY9CGNLa2Mvbmmkqv3o_rIttcvyZf1yTFnxEbTUZgFRJNHfWho98bcNGsphyVGdmUGCdBuLLmPMwm-IDq7YHN5Uw-16SYW2p4w46XYxFrY6t0EOmGfoL0GS3nMJjcz6O6F5x6VySzE"
                                 fill
+                                sizes="(max-width: 1024px) 100vw, 420px"
                                 className="object-cover"
                             />
                         </motion.div>
@@ -99,6 +100,7 @@ export default function Story() {
                                 alt="Fabric cutting"
                                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2jjINy6X9ZmAL4TH-7YZv-jAgM_DqAMy5Qi-pLg2WQMKDfgkZCbrbIbaGZ_Bga_TcYvpHAr3lifqniq4w2QOfFeiyPuCMosLCCBZ_HjaaT7pwxS9s48nF2zz22_ic3IEbtbGojgJR9lDAhajnBAVWDQT3In_cQC2EBfnbNUQ3fM4cVQycrlvZ6tlbjNuHMTp2f3EY1p59GroL9sxakiADc1SSJL5EeB6DzfTPT9_qO81t3iClmClubUMQzTXltq53rc8Z6N6ySN-G"
                                 fill
+                                sizes="(max-width: 1024px) 100vw, 420px"
                                 className="object-cover"
                             />
                         </motion.div>

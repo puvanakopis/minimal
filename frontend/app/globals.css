@@ -37,3 +37,114 @@
   font-family: 'Material Symbols Outlined';
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
+
+/* React Toastify - MINIMAL System UI Theme */
+:root {
+  --toastify-color-light: #ffffff;
+  --toastify-color-dark: #1a1a1a;
+  --toastify-color-info: #17b0cf;
+  --toastify-color-success: #17b0cf;
+  --toastify-color-warning: #17b0cf;
+  --toastify-color-error: #17b0cf;
+  --toastify-icon-color-info: #17b0cf;
+  --toastify-icon-color-success: #17b0cf;
+  --toastify-icon-color-warning: #17b0cf;
+  --toastify-icon-color-error: #17b0cf;
+  --toastify-color-progress-light: #17b0cf;
+  --toastify-color-progress-dark: #17b0cf;
+  --toastify-color-progress-info: #17b0cf;
+  --toastify-color-progress-success: #17b0cf;
+  --toastify-color-progress-warning: #17b0cf;
+  --toastify-color-progress-error: #17b0cf;
+  --toastify-color-progress-bgo: 0.15;
+  --toastify-toast-width: 380px;
+  --toastify-toast-background: #ffffff;
+  --toastify-toast-min-height: 58px;
+  --toastify-toast-max-height: 800px;
+  --toastify-font-family: var(--font-display), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --toastify-z-index: 99999;
+}
+
+.Toastify__toast-container {
+  padding: 16px;
+  z-index: 99999;
+  width: min(390px, 92vw);
+}
+
+.Toastify__toast {
+  font-family: var(--font-display), sans-serif !important;
+  border-radius: 16px !important;
+  padding: 12px 14px !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid #e7f1f3 !important;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03) !important;
+  color: #1a1a1a !important;
+  margin-bottom: 12px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.Toastify__toast:hover {
+  box-shadow: 0 20px 42px -6px rgba(0, 0, 0, 0.12), 0 6px 16px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.Toastify__toast-body {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  color: #1a1a1a !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Close Button */
+.Toastify__close-button {
+  color: #71717a !important;
+  opacity: 0.6 !important;
+  transition: opacity 0.2s ease, color 0.2s ease !important;
+  align-self: center !important;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1 !important;
+  color: #18181b !important;
+}
+
+/* UI Blue Progress Bar / Bottom Accent Line */
+.Toastify__progress-bar--wrp {
+  height: 2.5px !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  border-bottom-left-radius: 16px !important;
+  border-bottom-right-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.Toastify__progress-bar,
+.Toastify__progress-bar--animated,
+.Toastify__progress-bar--controlled,
+.Toastify__progress-bar--default,
+.Toastify__progress-bar--success,
+.Toastify__progress-bar--error,
+.Toastify__progress-bar--warning,
+.Toastify__progress-bar--info,
+.Toastify__progress-bar-theme--light,
+.Toastify__progress-bar-theme--dark,
+.Toastify__progress-bar-theme--colored,
+.minimal-toast ~ .Toastify__progress-bar,
+.minimal-toast .Toastify__progress-bar {
+  height: 100% !important;
+  background: #17b0cf !important;
+  opacity: 1 !important;
+}
+
+.Toastify__progress-bar--bg {
+  background: #e7f1f3 !important;
+  opacity: 0.5 !important;
+}

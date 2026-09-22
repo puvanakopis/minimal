@@ -1,24 +1,27 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
-import type { Product } from '@/data/products';
+import { Product } from '@/interfaces';
 import { ChevronDown } from 'lucide-react';
 
 interface ProductGridProps {
     products: Product[];
     currentPage: number;
     productsPerPage: number;
+    loading?: boolean;
+    sortBy?: string;
+    onSortChange?: (value: string) => void;
 }
 
 export default function ProductGrid({
     products,
     currentPage,
     productsPerPage,
+    loading = false,
+    sortBy = 'newest',
+    onSortChange,
 }: ProductGridProps) {
-    const [sortBy, setSortBy] = useState('Newest Arrivals');
-
     const startIndex = (currentPage - 1) * productsPerPage;
     const paginatedProducts = products.slice(
         startIndex,
@@ -48,13 +51,13 @@ export default function ProductGrid({
                     <div className="relative flex items-center">
                         <select
                             value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
+                            onChange={(e) => onSortChange?.(e.target.value)}
                             className="bg-transparent border-none text-xs uppercase tracking-widest cursor-pointer py-0 pr-8 appearance-none focus:outline-none focus:ring-0 focus:border-none"
                         >
-                            <option>Newest Arrivals</option>
-                            <option>Price: Low to High</option>
-                            <option>Price: High to Low</option>
-                            <option>Recommended</option>
+                            <option value="newest">Newest Arrivals</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="rating">Rating</option>
                         </select>
                         <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-400" />
                     </div>
@@ -62,9 +65,21 @@ export default function ProductGrid({
             </motion.div>
 
             {/* Product Grid */}
-            {totalProducts === 0 ? (
-                <div className="text-center py-20">
-                    <p className="text-[#4e8b97] text-sm italic">No products found in this category.</p>
+            {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
+                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                        <div key={n} className="animate-pulse space-y-4">
+                            <div className="aspect-[4/5] bg-gray-100 rounded-lg"></div>
+                            <div className="h-4 bg-gray-100 rounded w-3/4 mx-auto"></div>
+                            <div className="h-3 bg-gray-100 rounded w-1/2 mx-auto"></div>
+                            <div className="h-4 bg-gray-100 rounded w-1/4 mx-auto"></div>
+                        </div>
+                    ))}
+                </div>
+            ) : totalProducts === 0 ? (
+                <div className="text-center py-20 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                    <p className="text-[#4e8b97] text-sm italic mb-2">No products found for women.</p>
+                    <p className="text-xs text-gray-400">Try adjusting your filters or browse other collections.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
@@ -79,9 +94,9 @@ export default function ProductGrid({
                             <ProductCard
                                 id={product.id}
                                 title={product.name}
-                                color={product.colors?.[0]?.name || 'Standard'}
+                                category={product.category}
                                 price={product.price}
-                                image={product.image}
+                                image={product.image || product.mainImage || ''}
                             />
                         </motion.div>
                     ))}
