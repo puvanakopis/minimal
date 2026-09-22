@@ -94,7 +94,7 @@ export default function ProductGrid({
                             <ProductCard
                                 id={product.id}
                                 title={product.name}
-                                color={product.colors?.[0]?.name || 'Standard'}
+                                category={product.category}
                                 price={product.price}
                                 image={product.image || product.mainImage || ''}
                             />

@@ -16,10 +16,12 @@ import {
   Layers,
   CheckCircle2,
   AlertCircle,
+  Package,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Product } from '@/interfaces';
-import { productService } from '@/services';
+import { useProducts } from '@/context';
 import { getImageUrl } from '@/helper/image';
 import { notify } from '@/helper/toast';
 import AdminLoading from '../loading';
@@ -41,6 +43,14 @@ const CATEGORY_OPTIONS = [
 ];
 
 export default function AdminProducts() {
+  const {
+    adminGetProducts,
+    uploadImage,
+    adminCreateProduct,
+    adminUpdateProduct,
+    adminDeleteProduct,
+  } = useProducts();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,7 +84,7 @@ export default function AdminProducts() {
 
   async function fetchProducts() {
     try {
-      const response = await productService.adminGetProducts();
+      const response = await adminGetProducts();
       if (response.success && response.data) {
         setProducts(response.data);
       }
@@ -113,6 +123,27 @@ export default function AdminProducts() {
       return matchesSearch && matchesCategory && matchesGender;
     });
   }, [products, searchQuery, categoryFilter, genderFilter]);
+
+  // Key Metrics
+  const metrics = useMemo(() => {
+    const totalCount = products.length;
+    let menCount = 0;
+    let womenCount = 0;
+    const categoriesSet = new Set<string>();
+
+    products.forEach((p) => {
+      if (p.gender?.toLowerCase() === 'men') menCount++;
+      else if (p.gender?.toLowerCase() === 'women') womenCount++;
+      if (p.category) categoriesSet.add(p.category);
+    });
+
+    return {
+      totalCount,
+      menCount,
+      womenCount,
+      categoriesCount: categoriesSet.size,
+    };
+  }, [products]);
 
   const handleOpenAddModal = () => {
     setName('');
@@ -231,7 +262,7 @@ export default function AdminProducts() {
 
       for (const item of imagesList) {
         if (item.file) {
-          const uploadRes = await productService.uploadImage(item.file);
+          const uploadRes = await uploadImage(item.file);
           if (!uploadRes.success || !uploadRes.data?.imageUrl) {
             throw new Error(uploadRes.message || 'Failed to upload product image');
           }
@@ -248,7 +279,7 @@ export default function AdminProducts() {
       const primaryImage = uploadedUrls[0];
       const finalCategory = (categorySelection === 'Other' ? customCategory.trim() : categorySelection) || 'General';
 
-      const response = await productService.adminCreateProduct({
+      const response = await adminCreateProduct({
         name,
         price: parseFloat(price) || 0,
         category: finalCategory,
@@ -299,7 +330,7 @@ export default function AdminProducts() {
 
       for (const item of imagesList) {
         if (item.file) {
-          const uploadRes = await productService.uploadImage(item.file);
+          const uploadRes = await uploadImage(item.file);
           if (!uploadRes.success || !uploadRes.data?.imageUrl) {
             throw new Error(uploadRes.message || 'Failed to upload product image');
           }
@@ -312,7 +343,7 @@ export default function AdminProducts() {
       const primaryImage = finalImageUrls.length > 0 ? finalImageUrls[0] : editingProduct.image;
       const finalCategory = (categorySelection === 'Other' ? customCategory.trim() : categorySelection) || 'General';
 
-      const response = await productService.adminUpdateProduct(editingProduct.id, {
+      const response = await adminUpdateProduct(editingProduct.id, {
         name,
         price: parseFloat(price) || 0,
         category: finalCategory,
@@ -345,7 +376,7 @@ export default function AdminProducts() {
     if (!confirm(`Are you sure you want to permanently delete product "${productName}"? This action cannot be undone.`)) return;
 
     try {
-      const response = await productService.adminDeleteProduct(id);
+      const response = await adminDeleteProduct(id);
       if (response.success) {
         notify.success(`Product "${productName}" deleted successfully.`);
         fetchProducts();
@@ -385,6 +416,53 @@ export default function AdminProducts() {
           <Plus size={16} />
           <span>Add Product</span>
         </button>
+      </div>
+
+      {/* METRICS ROW */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4.5 rounded-2xl border border-[#e7f1f3] shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Total Products</span>
+            <div className="size-8 rounded-lg bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+              <Package size={16} />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-[#1a1a1a]">{metrics.totalCount}</div>
+          <div className="text-[11px] text-gray-400 mt-0.5">Active catalog items</div>
+        </div>
+
+        <div className="bg-white p-4.5 rounded-2xl border border-[#e7f1f3] shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Men&apos;s Collection</span>
+            <div className="size-8 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600">
+              <Tag size={16} />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-[#1a1a1a]">{metrics.menCount}</div>
+          <div className="text-[11px] text-sky-600 font-medium mt-0.5">Men&apos;s apparel</div>
+        </div>
+
+        <div className="bg-white p-4.5 rounded-2xl border border-[#e7f1f3] shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Women&apos;s Collection</span>
+            <div className="size-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
+              <Sparkles size={16} />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-[#1a1a1a]">{metrics.womenCount}</div>
+          <div className="text-[11px] text-rose-600 font-medium mt-0.5">Women&apos;s apparel</div>
+        </div>
+
+        <div className="bg-white p-4.5 rounded-2xl border border-[#e7f1f3] shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Categories</span>
+            <div className="size-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <Layers size={16} />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-[#1a1a1a]">{metrics.categoriesCount}</div>
+          <div className="text-[11px] text-emerald-600 font-medium mt-0.5">Distinct categories</div>
+        </div>
       </div>
 
       {/* SEARCH AND FILTER BAR */}
@@ -498,7 +576,7 @@ export default function AdminProducts() {
                       {/* PRICE */}
                       <td className="p-4">
                         <span className="text-xs font-bold text-[#1a1a1a]">
-                          ${product.price.toFixed(2)}
+                          Rs. {product.price.toFixed(2)}
                         </span>
                       </td>
 
@@ -617,7 +695,7 @@ export default function AdminProducts() {
               <div className="space-y-4 text-xs text-gray-600">
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
                   <div className="flex justify-between items-baseline">
-                    <span className="text-2xl font-bold text-[#1a1a1a]">${viewingProduct.price.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-[#1a1a1a]">Rs. {viewingProduct.price.toFixed(2)}</span>
                     <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-brand-teal/10 text-brand-teal">
                       {viewingProduct.gender}
                     </span>
@@ -659,20 +737,6 @@ export default function AdminProducts() {
                   </div>
                 )}
 
-                {/* COLORS */}
-                {viewingProduct.colors && viewingProduct.colors.length > 0 && (
-                  <div className="space-y-1.5">
-                    <h4 className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Color Variants</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {viewingProduct.colors.map((c, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-xs">
-                          <span className="size-3 rounded-full border border-black/10" style={{ backgroundColor: c.hex }} />
-                          <span className="font-medium text-gray-700">{c.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* DETAILS LIST */}
                 {viewingProduct.details && viewingProduct.details.length > 0 && (
@@ -779,7 +843,7 @@ export default function AdminProducts() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">
-                    Price ($) <span className="text-rose-500">*</span>
+                    Price (Rs.) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"

@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Product, Review } from '@/interfaces';
-import { productService } from '@/services';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, useFavorites, useProducts, useCart } from '@/context';
 import { notify } from '@/helper/toast';
 import { Star, MessageSquare, Send, CheckCircle2, User as UserIcon } from 'lucide-react';
 
@@ -14,11 +13,18 @@ interface ProductDetailsProps {
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { getProductReviews, postReview } = useProducts();
+  const { addToCart } = useCart();
+  const favorited = isFavorite(product.id);
+
+  const availableSizes = product.sizes && product.sizes.length > 0
+    ? product.sizes.map((s) => (typeof s === 'string' ? s : String(s)))
+    : ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
   const [selectedSize, setSelectedSize] = useState<string | null>(
-    product.sizes && product.sizes.length > 0 ? (typeof product.sizes[0] === 'string' ? product.sizes[0] : (product.sizes[0] as any)) : null
+    availableSizes.length > 0 ? availableSizes[0] : 'M'
   );
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || null);
   const [quantity, setQuantity] = useState(1);
   const [activeAccordion, setActiveAccordion] = useState<string | null>('details');
 
@@ -39,7 +45,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       if (!product.id) return;
       setLoadingReviews(true);
       try {
-        const res = await productService.getProductReviews(product.id);
+        const res = await getProductReviews(product.id);
         if (isMounted && res.success && res.data) {
           setReviews(res.data);
         }
@@ -53,16 +59,18 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     return () => {
       isMounted = false;
     };
-  }, [product.id]);
+  }, [product.id, getProductReviews]);
 
-  const handleAddToCart = () => {
-    notify.success(`Added ${quantity} × ${product.name} to your bag.`);
-    console.log('Added to cart:', {
+  const handleAddToCart = async () => {
+    if (!selectedSize) {
+      notify.warning('Please select a size before adding to cart.');
+      return;
+    }
+    await addToCart(
       product,
-      size: selectedSize,
-      color: selectedColor,
       quantity,
-    });
+      selectedSize
+    );
   };
 
   const toggleAccordion = (id: string) => {
@@ -88,7 +96,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         : undefined;
       const authorEmail = user?.email || undefined;
 
-      const response = await productService.postReview(product.id, {
+      const response = await postReview(product.id, {
         rating: reviewRating,
         authorName: authorFullName,
         authorEmail: authorEmail,
@@ -178,75 +186,43 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         Rs. {product.price?.toLocaleString()}
       </p>
 
-      {/* Color Selection */}
-      {product.colors && product.colors.length > 0 && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em]">
-              Color:{' '}
-              <span className="font-normal normal-case ml-1 text-[#4e8b97]">
-                {selectedColor?.name || 'Default'}
-              </span>
-            </h4>
-          </div>
+      {/* Size Selection */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-900">
+            Select Size:{' '}
+            <span className="font-semibold text-brand-teal normal-case ml-1 font-serif text-sm">
+              {selectedSize ? `Size ${selectedSize}` : 'Please Select'}
+            </span>
+          </h4>
 
-          <div className="flex gap-4">
-            {product.colors.map((color, idx) => (
+          <button type="button" className="text-[10px] uppercase tracking-widest font-bold text-brand-teal border-b border-brand-teal/30 hover:border-brand-teal transition-all cursor-pointer">
+            Size Guide
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          {availableSizes.map((size) => {
+            const isSelected = selectedSize === size;
+            return (
               <button
-                key={color.id || idx}
+                key={size}
                 type="button"
-                onClick={() => setSelectedColor(color)}
+                onClick={() => setSelectedSize(size)}
                 className={`
-                  size-9 rounded-full transition-all duration-200 cursor-pointer
-                  ${selectedColor?.name === color.name
-                    ? 'ring-2 ring-brand-teal ring-offset-4 scale-110'
-                    : 'hover:ring-2 hover:ring-gray-300 hover:ring-offset-2'
+                  min-w-12 h-11 px-5 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 border cursor-pointer flex items-center justify-center
+                  ${isSelected
+                    ? 'border-brand-teal bg-brand-teal text-white shadow-md scale-105'
+                    : 'border-gray-200 bg-white hover:border-brand-teal text-gray-700 hover:bg-[#f6f8f8]'
                   }
                 `}
-                style={{ backgroundColor: color.hex }}
-                title={color.name}
-              />
-            ))}
-          </div>
+              >
+                {size}
+              </button>
+            );
+          })}
         </div>
-      )}
-
-      {/* Size Selection */}
-      {product.sizes && product.sizes.length > 0 && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em]">
-              Select Size
-            </h4>
-
-            <button type="button" className="text-[10px] uppercase tracking-widest font-bold text-brand-teal border-b border-brand-teal/30 hover:border-brand-teal transition-all cursor-pointer">
-              Size Guide
-            </button>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            {product.sizes.map((size) => {
-              const sizeStr = typeof size === 'string' ? size : String(size);
-              return (
-                <button
-                  key={sizeStr}
-                  type="button"
-                  onClick={() => setSelectedSize(sizeStr)}
-                  className={`
-                    px-5 py-3 text-xs font-medium rounded-lg transition-all duration-200 border cursor-pointer
-                    ${selectedSize === sizeStr
-                      ? 'border-brand-teal bg-brand-teal text-white font-bold shadow-sm'
-                      : 'border-gray-200 bg-white hover:border-brand-teal text-gray-700'
-                    }
-                  `}
-                >
-                  {sizeStr}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Quantity Selector */}
       <div className="mb-8">
@@ -290,9 +266,18 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
         <button
           type="button"
-          className="px-6 py-4 bg-white border border-[#e7f1f3] text-gray-700 text-xs font-bold uppercase tracking-[0.2em] hover:text-brand-teal hover:border-brand-teal transition-all rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+          onClick={() => toggleFavorite({ id: product.id, name: product.name })}
+          className={`px-6 py-4 border text-xs font-bold uppercase tracking-[0.2em] transition-all rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
+            favorited
+              ? 'bg-[#e7f1f3] text-brand-teal border-brand-teal hover:bg-[#d8eaee] shadow-sm'
+              : 'bg-white border-[#e7f1f3] text-gray-700 hover:text-brand-teal hover:border-brand-teal'
+          }`}
+          title={favorited ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <span className="material-symbols-outlined text-lg">
+          <span
+            className="material-symbols-outlined text-lg"
+            style={{ fontVariationSettings: favorited ? "'FILL' 1" : "'FILL' 0" }}
+          >
             favorite
           </span>
         </button>

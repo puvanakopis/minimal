@@ -3,15 +3,12 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useAuth } from "@/context/AuthContext";
-import { userService } from "@/services";
+import { useAuth, useUsers } from "@/context";
 import { notify } from "@/helper/toast";
-
-const DEFAULT_AVATAR =
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAkqKN-Dn7b2RiByQOdsY3JsOSPqwWe9h5hkK-nlCe_c-yNoY5XnCvvlLfbad7i9b5Hnd_0IG_26KxM972ZeCq7XZ6jaoWnDQcGSMK6pDILCqAqd0y6TPCeIaTGtlyjDNk00J9lutPGvfb97ttlZsxF4Su7lU3kWdeJvFzgoMTlOZm4j1Jwu7Zx38TrKUzlpgcm4FfesCRehO4diutfWGA_X-cQmywSMVRptlZ0_oBPL3Nc7wNj7m_OFngqYFlIe_IUX-VjGx_66KtP";
 
 export function ProfileForm() {
     const { user, setUser } = useAuth();
+    const { uploadAvatar, updateProfile } = useUsers();
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -21,13 +18,15 @@ export function ProfileForm() {
         address: "",
     });
 
-    const [profileImage, setProfileImage] = useState<string>(DEFAULT_AVATAR);
+    const [profileImage, setProfileImage] = useState<string>("");
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
     const [statusMessage, setStatusMessage] = useState<string>("");
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const firstInitial = (formData.firstName?.trim()?.[0] || user?.firstName?.trim()?.[0] || user?.email?.trim()?.[0] || "U").toUpperCase();
 
     useEffect(() => {
         if (user) {
@@ -40,6 +39,8 @@ export function ProfileForm() {
             });
             if (user.avatar) {
                 setProfileImage(user.avatar);
+            } else {
+                setProfileImage("");
             }
         }
     }, [user]);
@@ -80,14 +81,14 @@ export function ProfileForm() {
             let finalAvatar = profileImage;
 
             if (avatarFile) {
-                const uploadRes = await userService.uploadAvatar(avatarFile);
+                const uploadRes = await uploadAvatar(avatarFile);
                 if (!uploadRes.success || !uploadRes.data?.avatarUrl) {
                     throw new Error(uploadRes.message || "Failed to upload avatar image");
                 }
                 finalAvatar = uploadRes.data.avatarUrl;
             }
 
-            const res = await userService.updateProfile({
+            const res = await updateProfile({
                 firstName: formData.firstName.trim(),
                 lastName: formData.lastName.trim(),
                 phoneNumber: formData.phone.trim(),
@@ -158,15 +159,21 @@ export function ProfileForm() {
                     className="flex flex-col items-center gap-8 group"
                 >
                     <div className="relative w-48 h-48 overflow-hidden bg-zinc-100 rounded-full border border-brand-teal/20 p-1 shadow-2xl">
-                        <div className="relative w-full h-full rounded-full overflow-hidden">
-                            <Image
-                                src={profileImage || DEFAULT_AVATAR}
-                                alt="Profile photo"
-                                fill
-                                unoptimized={profileImage.startsWith("data:") || profileImage.startsWith("blob:") || profileImage.startsWith("/uploads/")}
-                                className="object-cover grayscale hover:grayscale-0 transition-all duration-1000 ease-in-out scale-105 hover:scale-100"
-                                sizes="(max-width: 192px) 100vw, 192px"
-                            />
+                        <div className="relative w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-zinc-50">
+                            {profileImage ? (
+                                <Image
+                                    src={profileImage}
+                                    alt="Profile photo"
+                                    fill
+                                    unoptimized={profileImage.startsWith("data:") || profileImage.startsWith("blob:") || profileImage.startsWith("/uploads/")}
+                                    className="object-cover grayscale hover:grayscale-0 transition-all duration-1000 ease-in-out scale-105 hover:scale-100"
+                                    sizes="(max-width: 192px) 100vw, 192px"
+                                />
+                            ) : (
+                                <div className="w-full h-full rounded-full bg-brand-teal/10 text-brand-teal flex items-center justify-center font-serif text-6xl font-bold select-none">
+                                    {firstInitial}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -181,28 +188,14 @@ export function ProfileForm() {
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="text-[10px] font-bold text-zinc-400 hover:text-brand-teal transition-all tracking-[0.2em] border-b border-zinc-200 hover:border-brand-teal pb-1"
+                        className="text-[10px] font-bold text-zinc-400 hover:text-brand-teal transition-all tracking-[0.2em] border-b border-zinc-200 hover:border-brand-teal pb-1 cursor-pointer"
                     >
-                        UPDATE AVATAR
+                        {profileImage ? "UPDATE AVATAR" : "UPLOAD AVATAR"}
                     </button>
                 </motion.div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="flex-1 space-y-12 w-full">
-                    {statusMessage && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`p-4 rounded-xl text-sm font-medium ${
-                                saveStatus === "success"
-                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                    : "bg-red-50 text-red-800 border border-red-200"
-                            }`}
-                        >
-                            {statusMessage}
-                        </motion.div>
-                    )}
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                         {/* First Name */}
                         <motion.div

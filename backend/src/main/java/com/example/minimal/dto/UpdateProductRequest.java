@@ -34,8 +34,6 @@ public class UpdateProductRequest {
     @jakarta.validation.constraints.Size(max = 5, message = "A maximum of 5 images is allowed per product")
     private List<String> images;
 
-    private List<ProductColorDto> colors;
-
     private List<String> sizes;
 
     private List<String> details;

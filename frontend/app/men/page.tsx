@@ -6,7 +6,7 @@ import Pagination from '@/components/Pagination';
 import Breadcrumb from '@/components/Breadcrumb';
 import ProductGrid from '@/app/men/_components/ProductGrid';
 import Filter from '@/app/men/_components/Filter';
-import { productService } from '@/services';
+import { useProducts } from '@/context';
 import { Product } from '@/interfaces';
 
 import { allProducts } from '@/data/products';
@@ -14,6 +14,7 @@ import { allProducts } from '@/data/products';
 const PRODUCTS_PER_PAGE = 6;
 
 export default function MenShop() {
+    const { getProducts } = useProducts();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -22,8 +23,7 @@ export default function MenShop() {
     const [sortBy, setSortBy] = useState('newest');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedSize, setSelectedSize] = useState<string>('');
-    const [selectedColor, setSelectedColor] = useState<string>('');
-    const [priceRange, setPriceRange] = useState<number>(1000);
+    const [priceRange, setPriceRange] = useState<number>(100000);
 
     const breadcrumbItems = [
         { label: 'Home', href: '/' },
@@ -36,7 +36,7 @@ export default function MenShop() {
             setLoading(true);
             try {
                 // Fetch products (backend supports gender param or we can fetch and filter men + unisex)
-                const response = await productService.getProducts({
+                const response = await getProducts({
                     gender: 'men',
                     sortBy,
                 });
@@ -70,8 +70,7 @@ export default function MenShop() {
     const handleResetFilters = () => {
         setSelectedCategories([]);
         setSelectedSize('');
-        setSelectedColor('');
-        setPriceRange(1000);
+        setPriceRange(100000);
         setCurrentPage(1);
     };
 
@@ -90,19 +89,13 @@ export default function MenShop() {
                     return false;
                 }
             }
-            // Color
-            if (selectedColor) {
-                if (!product.colors || !product.colors.some((c) => c.name.toLowerCase().includes(selectedColor.toLowerCase()))) {
-                    return false;
-                }
-            }
             // Price range
             if (product.price > priceRange) {
                 return false;
             }
             return true;
         });
-    }, [products, selectedCategories, selectedSize, selectedColor, priceRange]);
+    }, [products, selectedCategories, selectedSize, priceRange]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -119,21 +112,17 @@ export default function MenShop() {
                 className="bg-black/10 py-16 px-10 border-b border-[#e7f1f3]"
             >
                 <div className="max-w-7xl mx-auto">
-                    <Breadcrumb
-                        items={breadcrumbItems}
-                        className="mb-4"
-                    />
-                    <h1 className="text-5xl font-serif italic tracking-tight">Men</h1>
+                    <Breadcrumb items={breadcrumbItems} />
                 </div>
             </motion.section>
 
-            {/* Filter + Products */}
-            <section className="max-w-7xl mx-auto px-10 py-24 flex flex-col lg:flex-row gap-12">
+            {/* Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 flex flex-col md:flex-row gap-10">
                 <motion.aside
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    className="w-full lg:w-1/5 shrink-0"
+                    transition={{ duration: 0.8 }}
+                    className="w-full md:w-64 shrink-0"
                 >
                     <Filter
                         selectedCategories={selectedCategories}
@@ -141,11 +130,6 @@ export default function MenShop() {
                         selectedSize={selectedSize}
                         onSizeChange={(size) => {
                             setSelectedSize(size);
-                            setCurrentPage(1);
-                        }}
-                        selectedColor={selectedColor}
-                        onColorChange={(color) => {
-                            setSelectedColor(color);
                             setCurrentPage(1);
                         }}
                         priceRange={priceRange}
@@ -184,7 +168,7 @@ export default function MenShop() {
                         />
                     )}
                 </motion.div>
-            </section>
+            </div>
         </main>
     );
 }

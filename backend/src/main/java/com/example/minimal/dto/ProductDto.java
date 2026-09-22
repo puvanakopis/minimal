@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +25,6 @@ public class ProductDto {
     private String mainImage;
     private String image;
     private List<String> images;
-    private List<ProductColorDto> colors;
     private List<String> sizes;
     private List<String> details;
     private List<String> features;
@@ -40,12 +38,6 @@ public class ProductDto {
     public static ProductDto fromEntity(Product product) {
         if (product == null) return null;
 
-        List<ProductColorDto> colorDtos = product.getColors() != null
-                ? product.getColors().stream()
-                        .map(ProductColorDto::fromEntity)
-                        .collect(Collectors.toList())
-                : new ArrayList<>();
-
         return ProductDto.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -57,7 +49,6 @@ public class ProductDto {
                 .mainImage(product.getMainImage() != null ? product.getMainImage() : product.getImage())
                 .image(product.getImage())
                 .images(product.getImages() != null ? new ArrayList<>(product.getImages()) : new ArrayList<>())
-                .colors(colorDtos)
                 .sizes(product.getSizes() != null ? new ArrayList<>(product.getSizes()) : new ArrayList<>())
                 .details(product.getDetails() != null ? new ArrayList<>(product.getDetails()) : new ArrayList<>())
                 .features(product.getFeatures() != null ? new ArrayList<>(product.getFeatures()) : new ArrayList<>())

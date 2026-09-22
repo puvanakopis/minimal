@@ -62,11 +62,6 @@ public class Product {
     @Builder.Default
     private List<String> images = new ArrayList<>();
 
-    @Convert(converter = ProductColorListConverter.class)
-    @Column(name = "colors", columnDefinition = "LONGTEXT")
-    @Builder.Default
-    private List<ProductColor> colors = new ArrayList<>();
-
     @Convert(converter = StringListConverter.class)
     @Column(name = "sizes", columnDefinition = "TEXT")
     @Builder.Default
@@ -124,9 +119,6 @@ public class Product {
         }
         if (this.images == null) {
             this.images = new ArrayList<>();
-        }
-        if (this.colors == null) {
-            this.colors = new ArrayList<>();
         }
         if (this.sizes == null) {
             this.sizes = new ArrayList<>();

@@ -6,12 +6,15 @@ import Image from 'next/image'
 import LogoIcon from './LogoIcon'
 import useNavigateTo from '@/hooks/useNavigateTo'
 import { useAuth } from '@/context/AuthContext'
+import { useFavorites } from '@/context/FavoriteContext'
+import { useCart } from '@/context/CartContext'
 
 export default function Header() {
-    const [cartCount] = useState(0)
+    const { cartCount } = useCart()
     const [menuOpen, setMenuOpen] = useState(false)
     const [profileOpen, setProfileOpen] = useState(false)
     const { user, logout } = useAuth()
+    const { favoritesCount } = useFavorites()
 
     const navigateTo = useNavigateTo()
     const pathname = usePathname()
@@ -137,6 +140,21 @@ export default function Header() {
                     <button className="hidden sm:flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition">
                         <span className="material-symbols-outlined text-[20px]">
                             search
+                        </span>
+                    </button>
+
+                    {/* FAVORITES */}
+                    <button
+                        onClick={() => navigateTo('/favorites', true)}
+                        className="relative flex items-center justify-center rounded-xl size-9 sm:size-10 bg-gray-100 hover:bg-gray-200 transition text-gray-700 hover:text-primary"
+                        title="My Favorites"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">
+                            favorite
+                        </span>
+
+                        <span className="absolute -top-1 -right-1 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                            {favoritesCount}
                         </span>
                     </button>
 

@@ -6,7 +6,7 @@ import Pagination from '@/components/Pagination';
 import Breadcrumb from '@/components/Breadcrumb';
 import ProductGrid from '@/app/shop/_components/ProductGrid';
 import Filter from '@/app/shop/_components/Filter';
-import { productService } from '@/services';
+import { useProducts } from '@/context';
 import { Product } from '@/interfaces';
 
 import { allProducts } from '@/data/products';
@@ -14,6 +14,7 @@ import { allProducts } from '@/data/products';
 const PRODUCTS_PER_PAGE = 6;
 
 export default function Shop() {
+    const { getProducts } = useProducts();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -22,8 +23,7 @@ export default function Shop() {
     const [sortBy, setSortBy] = useState('newest');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedSize, setSelectedSize] = useState<string>('');
-    const [selectedColor, setSelectedColor] = useState<string>('');
-    const [priceRange, setPriceRange] = useState<number>(1000);
+    const [priceRange, setPriceRange] = useState<number>(100000);
 
     const breadcrumbItems = [
         { label: 'Home', href: '/' },
@@ -35,7 +35,7 @@ export default function Shop() {
         async function fetchAll() {
             setLoading(true);
             try {
-                const response = await productService.getProducts({
+                const response = await getProducts({
                     sortBy,
                 });
                 if (isMounted && response.success && response.data && response.data.length > 0) {
@@ -68,8 +68,7 @@ export default function Shop() {
     const handleResetFilters = () => {
         setSelectedCategories([]);
         setSelectedSize('');
-        setSelectedColor('');
-        setPriceRange(1000);
+        setPriceRange(100000);
         setCurrentPage(1);
     };
 
@@ -88,19 +87,13 @@ export default function Shop() {
                     return false;
                 }
             }
-            // Color filter
-            if (selectedColor) {
-                if (!product.colors || !product.colors.some((c) => c.name.toLowerCase().includes(selectedColor.toLowerCase()))) {
-                    return false;
-                }
-            }
             // Price range filter
             if (product.price > priceRange) {
                 return false;
             }
             return true;
         });
-    }, [products, selectedCategories, selectedSize, selectedColor, priceRange]);
+    }, [products, selectedCategories, selectedSize, priceRange]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -139,11 +132,6 @@ export default function Shop() {
                         selectedSize={selectedSize}
                         onSizeChange={(size) => {
                             setSelectedSize(size);
-                            setCurrentPage(1);
-                        }}
-                        selectedColor={selectedColor}
-                        onColorChange={(color) => {
-                            setSelectedColor(color);
                             setCurrentPage(1);
                         }}
                         priceRange={priceRange}

@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import ProductCard from '../../components/ProductCard'
-import { productService } from '@/services'
+import { useProducts } from '@/context'
 import { Product } from '@/interfaces'
 
 import { allProducts } from '@/data/products'
 
 export default function FeaturedProducts() {
+    const { getProducts } = useProducts()
     const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -17,7 +18,7 @@ export default function FeaturedProducts() {
         let isMounted = true
         async function loadFeaturedProducts() {
             try {
-                const response = await productService.getProducts()
+                const response = await getProducts()
                 if (isMounted && response.success && response.data && response.data.length > 0) {
                     setProducts(response.data.slice(0, 4))
                 } else if (isMounted) {
@@ -80,7 +81,7 @@ export default function FeaturedProducts() {
                                 <ProductCard
                                     id={product.id}
                                     title={product.name}
-                                    color={product.colors?.[0]?.name || 'Standard'}
+                                    category={product.category}
                                     price={product.price}
                                     image={product.image || product.mainImage || ''}
                                 />

@@ -2,7 +2,7 @@ import './globals.css';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import RouteGuard from '@/router/RouteGuard';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, UserProvider, ProductProvider, FavoriteProvider, CartProvider, CheckoutProvider } from '@/context';
 import ToastProvider from '@/components/ToastProvider';
 
 import {
@@ -45,12 +45,22 @@ export default function RootLayout({
       </head>
       <body className="bg-off-white font-display text-soft-charcoal selection:bg-brand-teal selection:text-white">
         <AuthProvider>
-          <RouteGuard>
-            <Header />
-            {children}
-            <Footer />
-            <ToastProvider />
-          </RouteGuard>
+          <UserProvider>
+            <ProductProvider>
+              <FavoriteProvider>
+                <CartProvider>
+                  <CheckoutProvider>
+                    <RouteGuard>
+                      <Header />
+                      {children}
+                      <Footer />
+                      <ToastProvider />
+                    </RouteGuard>
+                  </CheckoutProvider>
+                </CartProvider>
+              </FavoriteProvider>
+            </ProductProvider>
+          </UserProvider>
         </AuthProvider>
       </body>
     </html>

@@ -49,7 +49,9 @@ public class SecurityConfig {
                                 "/error",
                                 "/h2-console/**",
                                 "/api/products/**",
-                                "/uploads/**"
+                                "/uploads/**",
+                                "/api/orders/track/**",
+                                "/api/orders"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

@@ -179,10 +179,6 @@ public class ProductService {
 
         slug = ensureUniqueSlug(slug, null);
 
-        List<Product.ProductColor> colors = request.getColors() != null
-                ? request.getColors().stream().map(ProductColorDto::toEntity).collect(Collectors.toList())
-                : new ArrayList<>();
-
         List<String> images = request.getImages() != null ? new ArrayList<>(request.getImages()) : new ArrayList<>();
         if (images.isEmpty() && request.getImage() != null && !request.getImage().isBlank()) {
             images.add(request.getImage());
@@ -205,7 +201,6 @@ public class ProductService {
                 .mainImage(mainImage)
                 .image(primaryImage)
                 .images(images)
-                .colors(colors)
                 .sizes(request.getSizes() != null ? new ArrayList<>(request.getSizes()) : new ArrayList<>())
                 .details(request.getDetails() != null ? new ArrayList<>(request.getDetails()) : new ArrayList<>())
                 .features(request.getFeatures() != null ? new ArrayList<>(request.getFeatures()) : new ArrayList<>())
@@ -271,10 +266,6 @@ public class ProductService {
 
         if (request.getMainImage() != null && !request.getMainImage().isBlank()) {
             product.setMainImage(request.getMainImage());
-        }
-
-        if (request.getColors() != null) {
-            product.setColors(request.getColors().stream().map(ProductColorDto::toEntity).collect(Collectors.toList()));
         }
 
         if (request.getSizes() != null) {

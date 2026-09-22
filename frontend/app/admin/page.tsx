@@ -59,7 +59,7 @@ export default function AdminDashboard() {
   const statCards = [
     {
       title: 'Total Revenue',
-      value: `$${metrics?.totalSales.toFixed(2)}`,
+      value: `Rs. ${metrics?.totalSales.toFixed(2)}`,
       icon: DollarSign,
       color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
     },
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
                     >
                       {/* Tooltip */}
                       <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap font-bold">
-                        ${data.sales.toFixed(0)}
+                        Rs. {data.sales.toFixed(0)}
                       </span>
                     </div>
                   </div>
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                   <div className="text-right space-y-1">
-                    <span className="text-xs font-bold text-[#1a1a1a]">${order.totalAmount.toFixed(2)}</span>
+                    <span className="text-xs font-bold text-[#1a1a1a]">Rs. {order.totalAmount.toFixed(2)}</span>
                     <div>
                       <span
                         className={`inline-block text-[8px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full ${
